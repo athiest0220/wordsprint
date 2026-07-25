@@ -1,0 +1,22 @@
+# Flutter / Dart
+.dart_tool/
+.packages
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+pubspec.lock
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Local Dart SDK / scratch
+dart-sdk/
+*.tmp
+
+# Release signing secrets — NEVER commit these
+android/key.properties
+**/upload-keystore.jks
+*.jks
+assets/words.backup.txt

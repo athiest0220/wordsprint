@@ -1,0 +1,60 @@
+# Codemagic build config for Word Sprint (Flutter → iOS → TestFlight).
+#
+# One-time setup in the Codemagic web UI before the first build:
+#   1. Connect this GitHub repo.
+#   2. Team settings → Integrations → App Store Connect → add your ASC API key
+#      (the .p8 + Key ID + Issuer ID). Name it exactly:  WordSprintASC
+#   3. Make sure the bundle id below is registered in your Apple account and the
+#      app exists in App Store Connect.
+# Then just run the "ios-testflight" workflow.
+
+workflows:
+  ios-testflight:
+    name: Word Sprint iOS → TestFlight
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    integrations:
+      app_store_connect: WordSprintASC
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.speedbee.speedbee
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Get Flutter packages
+        script: flutter pub get
+      - name: Install CocoaPods dependencies
+        script: find . -name "Podfile" -execdir pod install \;
+      - name: Set up iOS code signing
+        script: xcode-project use-profiles
+      - name: Build signed IPA
+        script: |
+          flutter build ipa --release \
+            --build-number=$BUILD_NUMBER \
+            --export-options-plist=/Users/builder/export_options.plist
+    artifacts:
+      - build/ios/ipa/*.ipa
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        # After the first successful TestFlight upload, you can add beta_groups
+        # here to auto-distribute to your family testers.
+
+  # Optional: also build a signed Android AAB in the cloud. (Your local build
+  # already produces one; this is only if you want Codemagic to do it too.)
+  android-release:
+    name: Word Sprint Android (AAB)
+    instance_type: mac_mini_m2
+    max_build_duration: 45
+    environment:
+      flutter: stable
+    scripts:
+      - name: Get Flutter packages
+        script: flutter pub get
+      - name: Build AAB (unsigned here — sign locally or add a keystore in Codemagic)
+        script: flutter build appbundle --release
+    artifacts:
+      - build/app/outputs/bundle/release/*.aab

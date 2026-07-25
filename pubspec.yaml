@@ -1,0 +1,45 @@
+name: speedbee
+description: A timing-focused Spelling Bee style word game with 7-11 letter puzzles.
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  shared_preferences: ^2.2.2
+  cupertino_icons: ^1.0.6
+  share_plus: ^10.1.4
+  http: ^1.2.2
+  path_provider: ^2.1.4
+  in_app_purchase: ^3.2.0
+  url_launcher: ^6.3.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+  flutter_launcher_icons: ^0.14.1
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/words.txt
+    - assets/icon/logo.png
+    - assets/icon/run_bee.png
+    - assets/icon/grad_cap.png
+    - assets/icon/die.png
+    - assets/icon/run_bubble.png
+    - assets/icon/run_watch.png
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/icon_full.png"
+  image_path_ios: "assets/icon/icon_ios.png"
+  remove_alpha_ios: true
+  adaptive_icon_background: "#000000"
+  adaptive_icon_foreground: "assets/icon/icon_fg.png"
+  min_sdk_android: 24
