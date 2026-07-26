@@ -16,19 +16,22 @@ workflows:
     integrations:
       app_store_connect: WordSprintASC
     environment:
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.wordsprint.wordsprint
       flutter: stable
       xcode: latest
       cocoapods: default
     scripts:
+      - name: Set up iOS code signing (creates cert + profile if missing)
+        script: |
+          keychain initialize
+          app-store-connect fetch-signing-files "com.wordsprint.wordsprint" \
+            --type IOS_APP_STORE \
+            --create
+          keychain add-certificates
+          xcode-project use-profiles
       - name: Get Flutter packages
         script: flutter pub get
       - name: Install CocoaPods dependencies
         script: find . -name "Podfile" -execdir pod install \;
-      - name: Set up iOS code signing
-        script: xcode-project use-profiles
       - name: Build signed IPA
         script: |
           flutter build ipa --release \
