@@ -66,79 +66,84 @@ class PuzzleEngine {
     assert(sizes.contains(size), 'size must be 6..11');
     final minLen = minWordLength[size]!;
     final band = _wordBand[size]!;
-    final floor = band[0], target = band[1], ceil = band[2];
+    final floor = band[0], ceil = band[2];
 
-    // Seed is a pure function of (date, size, variant) so it's reproducible.
+    // Seed is a pure function of (date, size, variant) so it's reproducible and
+    // varies day to day.
     final seed = _seed(day, size, variant);
     final rng = _Rng(seed);
 
     // 1. Collect candidate letter sets: masks of words with exactly `size`
-    //    distinct letters, no 'S', and long enough to be a pangram. Each such
-    //    word guarantees its set has at least one pangram. A set is also
-    //    "perfect-capable" if some length-`size` isogram maps to it — those
-    //    sets have a perfect pangram (uses each letter exactly once).
+    //    distinct letters, no 'S', long enough to anchor a pangram (so every
+    //    candidate set is guaranteed to have at least one pangram).
     final candidateSet = <int>{};
-    final perfectCapable = <int>{};
     for (var i = 0; i < dict.words.length; i++) {
       if (dict.lengths[i] < minLen) continue;
       final m = dict.masks[i];
       if (m & _sBit != 0) continue;
-      if (Dictionary.popcount(m) == size) {
-        candidateSet.add(m);
-        if (dict.lengths[i] == size) perfectCapable.add(m); // isogram
-      }
+      if (Dictionary.popcount(m) == size) candidateSet.add(m);
     }
-    var candidates = candidateSet.toList()..sort(); // deterministic order
+    final candidates = candidateSet.toList()..sort(); // deterministic order
     _shuffle(candidates, rng);
 
-    // Roughly half of all days, front-load perfect-capable sets so the
-    // "time to perfect pangram" clock actually gets exercised — while still
-    // leaving plenty of days with no perfect pangram, as intended.
-    final preferPerfect = ((seed >> 3) & 1) == 1 && perfectCapable.isNotEmpty;
-    if (preferPerfect) {
-      final pref = <int>[];
-      final rest = <int>[];
-      for (final m in candidates) {
-        (perfectCapable.contains(m) ? pref : rest).add(m);
-      }
-      candidates = [...pref, ...rest]; // preserves shuffle order within groups
-    }
-
-    // 2. Try candidates until one lands in the target band. Keep the closest
-    //    fallback so we always return a playable puzzle.
-    _Build? best;
-    var bestDist = 1 << 30;
+    // 2. Walk candidates in the seeded-shuffle order (so the daily puzzle varies
+    //    with the date). Take the first (set, center) whose valid-word count lands
+    //    in the target band with a pangram. Otherwise keep the FIRST acceptable
+    //    candidate in shuffle order — a pangram, >= floor words, capped at 2x the
+    //    ceiling — as a seed-dependent fallback, so even large sizes (where an
+    //    11-letter set overshoots the ceiling) still change every day. The old
+    //    fallback picked the set globally closest to target, ignoring the date,
+    //    which made the 10/11 dailies identical day after day.
+    _Build? fallback;
+    var fbSet = 0, fbCenter = 0;
+    _Build? longFallback;
+    var lfSet = 0, lfCenter = 0;
+    final hardCeil = ceil * 2;
     const searchCap = 400;
 
     for (var c = 0; c < candidates.length && c < searchCap; c++) {
       final setMask = candidates[c];
-      final letterBits = _bitsOf(setMask);
-
-      // Evaluate each possible center letter for this set.
-      final order = List<int>.from(letterBits);
+      final order = List<int>.from(_bitsOf(setMask));
       _shuffle(order, rng);
       for (final centerBit in order) {
         final build = _evaluate(setMask, centerBit, size, minLen);
+        if (build.pangrams.isEmpty) continue;
         if (build.validWords.length < floor) continue;
-        final dist = (build.validWords.length - target).abs();
-        if (build.validWords.length <= ceil && build.pangrams.isNotEmpty) {
-          // In-band and has a pangram: accept immediately.
+        if (build.validWords.length <= ceil) {
           return _finish(day, size, setMask, centerBit, minLen, build);
         }
-        if (build.pangrams.isNotEmpty && dist < bestDist) {
-          bestDist = dist;
-          best = build.withCenter(setMask, centerBit);
+        if (build.validWords.length <= hardCeil) {
+          if (fallback == null) {
+            fallback = build;
+            fbSet = setMask;
+            fbCenter = centerBit;
+          }
+        } else if (longFallback == null) {
+          longFallback = build;
+          lfSet = setMask;
+          lfCenter = centerBit;
         }
       }
     }
 
-    // 3. Fallback: closest by word-count that still has a pangram.
-    if (best != null) {
-      return _finish(
-          day, size, best.setMask, best.centerBit, minLen, best);
+    // 3. No strictly in-band set: use the seed-ordered fallback (capped length).
+    if (fallback != null) {
+      return _finish(day, size, fbSet, fbCenter, minLen, fallback);
+    }
+    if (longFallback != null) {
+      return _finish(day, size, lfSet, lfCenter, minLen, longFallback);
     }
 
-    // 4. Last resort (essentially never hit): first candidate, first letter.
+    // 4. Last resort (essentially never hit): first candidate with a pangram.
+    for (var c = 0; c < candidates.length && c < searchCap; c++) {
+      final setMask = candidates[c];
+      for (final centerBit in _bitsOf(setMask)) {
+        final build = _evaluate(setMask, centerBit, size, minLen);
+        if (build.pangrams.isNotEmpty) {
+          return _finish(day, size, setMask, centerBit, minLen, build);
+        }
+      }
+    }
     final setMask = candidates.first;
     final centerBit = _bitsOf(setMask).first;
     final build = _evaluate(setMask, centerBit, size, minLen);
@@ -270,15 +275,7 @@ class _Build {
   final Set<String> validWords;
   final Set<String> pangrams;
   final Set<String> perfect;
-  int setMask = 0;
-  int centerBit = 0;
   _Build(this.validWords, this.pangrams, this.perfect);
-
-  _Build withCenter(int setMask, int centerBit) {
-    this.setMask = setMask;
-    this.centerBit = centerBit;
-    return this;
-  }
 }
 
 /// Mulberry32 — a tiny, fully-deterministic 32-bit PRNG. Chosen over
