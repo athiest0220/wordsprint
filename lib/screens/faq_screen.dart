@@ -22,6 +22,11 @@ class FaqScreen extends StatelessWidget {
           'a vocabulary.',
     ),
     _QA(
+      'Why are there no swear words?',
+      'It’s a family game. Feel free to curse at your own kids however you wish '
+          '— we just kept this one clean so nobody risks a mouthful of soap.',
+    ),
+    _QA(
       'Do I really have to use the center letter?',
       'Every single word. It’s the needy one. No center letter, no points.',
     ),
