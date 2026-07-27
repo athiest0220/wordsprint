@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -30,7 +32,17 @@ class AppRepository {
   static Future<AppRepository> initialize() async {
     final text = await rootBundle.loadString('assets/words.txt');
     final dict = Dictionary.fromText(text);
-    final engine = PuzzleEngine(dict);
+    // Precomputed no-repeat daily cycles for the large sizes (10 & 11).
+    final poolsRaw = jsonDecode(
+        await rootBundle.loadString('assets/daily_pools.json')) as Map<String, dynamic>;
+    final dailyPools = <int, List<List<String>>>{
+      for (final e in poolsRaw.entries)
+        int.parse(e.key): [
+          for (final entry in (e.value as List))
+            [for (final s in (entry as List)) s as String]
+        ]
+    };
+    final engine = PuzzleEngine(dict, dailyPools: dailyPools);
     final prefs = await SharedPreferences.getInstance();
     final stats = await StatsStore.load(prefs);
     final progress = ProgressStore(prefs);

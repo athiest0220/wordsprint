@@ -10,7 +10,13 @@ import 'dictionary.dart';
 class PuzzleEngine {
   final Dictionary dict;
 
-  PuzzleEngine(this.dict);
+  /// Precomputed no-repeat daily cycles for the large sizes (10 & 11), where
+  /// English offers too few reasonable letter-sets for the live generator to
+  /// vary well. Maps size -> ordered list of [letters, center]. Loaded from
+  /// assets/daily_pools.json; sizes absent here use the live generator.
+  final Map<int, List<List<String>>> dailyPools;
+
+  PuzzleEngine(this.dict, {this.dailyPools = const {}});
 
   /// Minimum word length per letter-count, as specified by the game rules.
   static const Map<int, int> minWordLength = {
@@ -58,8 +64,38 @@ class PuzzleEngine {
   /// letters (and gives the result its own key).
   Puzzle generate(DateTime date, int size, {int variant = 0}) {
     final day = dateOnly(date);
-    final p = _generate(day, size, variant);
+    final pool = dailyPools[size];
+    final Puzzle p;
+    if (pool != null && pool.isNotEmpty) {
+      // Walk the precomputed cycle by day number so puzzles never repeat until
+      // the whole pool is used. A reroll variant jumps to a different slot.
+      final i =
+          (((_dayIndex(day) + variant * 7919) % pool.length) + pool.length) %
+              pool.length;
+      p = _fromPool(day, size, pool[i][0], pool[i][1]);
+    } else {
+      p = _generate(day, size, variant);
+    }
     return variant == 0 ? p : p.withCustomKey(keyFor(day, size, variant));
+  }
+
+  /// Whole days since a fixed epoch, computed in UTC (DST-immune). This is the
+  /// index that walks the precomputed daily cycle.
+  int _dayIndex(DateTime day) => DateTime.utc(day.year, day.month, day.day)
+      .difference(DateTime.utc(2020, 1, 1))
+      .inDays;
+
+  /// Build a daily puzzle from an explicit letter set + center taken from the
+  /// precomputed pool. Same semantics as a generated daily (not an import).
+  Puzzle _fromPool(DateTime day, int size, String letters, String center) {
+    final minLen = minWordLength[size]!;
+    var setMask = 0;
+    for (final l in letters.toLowerCase().split('')) {
+      setMask |= Dictionary.maskOf(l);
+    }
+    final centerBit = Dictionary.maskOf(center.toLowerCase());
+    final build = _evaluate(setMask, centerBit, size, minLen);
+    return _finish(day, size, setMask, centerBit, minLen, build);
   }
 
   Puzzle _generate(DateTime day, int size, int variant) {

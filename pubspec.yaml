@@ -27,6 +27,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/words.txt
+    - assets/daily_pools.json
     - assets/icon/logo.png
     - assets/icon/run_bee.png
     - assets/icon/grad_cap.png
