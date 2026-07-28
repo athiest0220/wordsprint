@@ -28,6 +28,14 @@ class SettingsStore {
   Future<void> setHapticsEnabled(bool value) =>
       prefs.setBool(_hapticsKey, value);
 
+  static const _showOopsKey = 'speedbee.showOops';
+
+  /// When true (default), the game shows the "Oops" mistake counter. Players
+  /// who find it discouraging can hide it.
+  bool get showOops => prefs.getBool(_showOopsKey) ?? true;
+  Future<void> setShowOops(bool value) =>
+      prefs.setBool(_showOopsKey, value);
+
   // --- reroll variant ("New letters") ---
 
   String _variantKey(DateTime d, int size) =>

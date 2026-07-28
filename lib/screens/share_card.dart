@@ -22,6 +22,7 @@ class ShareResultScreen extends StatefulWidget {
   final int oopsCount;
   final int oopsAttempts;
   final int elapsedMs;
+  final bool showOops;
 
   const ShareResultScreen({
     super.key,
@@ -34,6 +35,7 @@ class ShareResultScreen extends StatefulWidget {
     required this.oopsCount,
     required this.oopsAttempts,
     required this.elapsedMs,
+    required this.showOops,
   });
 
   @override
@@ -54,6 +56,7 @@ class _ShareResultScreenState extends State<ShareResultScreen> {
         oopsCount: widget.oopsCount,
         oopsAttempts: widget.oopsAttempts,
         elapsedMs: widget.elapsedMs,
+        showOops: widget.showOops,
       );
 
   Future<void> _shareImage() async {
@@ -68,12 +71,22 @@ class _ShareResultScreenState extends State<ShareResultScreen> {
       final file = await File('${dir.path}/word_sprint_result.png')
           .writeAsBytes(bytes);
       // Image only — the card already shows everything, so no text caption.
-      await Share.shareXFiles([XFile(file.path)]);
+      await Share.shareXFiles([XFile(file.path)],
+          sharePositionOrigin: _shareOrigin());
     } catch (_) {
-      await Share.share(_caption); // fallback only if the image fails
+      await Share.share(_caption,
+          sharePositionOrigin: _shareOrigin()); // fallback if the image fails
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  /// iOS needs a source rectangle to anchor the share sheet (required on iPad,
+  /// and its absence can stop the sheet presenting on iPhone too).
+  Rect? _shareOrigin() {
+    final box = context.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) return null;
+    return box.localToGlobal(Offset.zero) & box.size;
   }
 
   @override
@@ -99,6 +112,7 @@ class _ShareResultScreenState extends State<ShareResultScreen> {
                       oopsCount: widget.oopsCount,
                       oopsAttempts: widget.oopsAttempts,
                       elapsedMs: widget.elapsedMs,
+                      showOops: widget.showOops,
                     ),
                   ),
                 ),
@@ -141,6 +155,7 @@ class _ResultCard extends StatelessWidget {
   final int oopsCount;
   final int oopsAttempts;
   final int elapsedMs;
+  final bool showOops;
 
   const _ResultCard({
     required this.puzzle,
@@ -152,6 +167,7 @@ class _ResultCard extends StatelessWidget {
     required this.oopsCount,
     required this.oopsAttempts,
     required this.elapsedMs,
+    required this.showOops,
   });
 
   Color _rankColor(String r) {
@@ -225,7 +241,7 @@ class _ResultCard extends StatelessWidget {
                   BeeColors.good),
             ],
           ),
-          if (oopsCount > 0 && oopsAttempts > 0) ...[
+          if (showOops && oopsCount > 0 && oopsAttempts > 0) ...[
             const SizedBox(height: 10),
             Text('🙈 Oops ${(oopsCount / oopsAttempts * 100).round()}%',
                 textAlign: TextAlign.center,

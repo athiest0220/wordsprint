@@ -7,9 +7,14 @@ import 'puzzle_engine.dart';
 class EntitlementStore {
   static const _purchasedKey = 'speedbee.purchased';
   static const _playDaysKey = 'speedbee.playDays';
+  static const _bonusDaysKey = 'speedbee.bonusTrialDays';
+  static const _promoRedeemedKey = 'speedbee.prismPromoRedeemed';
 
   /// Number of free trial days (distinct days played).
   static const trialDays = 3;
+
+  /// Extra trial days granted by redeeming the hidden Prism BI code.
+  static const promoTrialBonusDays = 5;
 
   final SharedPreferences prefs;
   EntitlementStore(this.prefs);
@@ -27,8 +32,15 @@ class EntitlementStore {
   }
 
   int get trialDaysUsed => _days().length;
+
+  /// Extra trial days granted by promo codes (0 unless a code was redeemed).
+  int get bonusTrialDays => prefs.getInt(_bonusDaysKey) ?? 0;
+
+  /// Total free trial days allowed: the base trial plus any promo bonus.
+  int get trialDayAllowance => trialDays + bonusTrialDays;
+
   int get trialDaysLeft {
-    final left = trialDays - trialDaysUsed;
+    final left = trialDayAllowance - trialDaysUsed;
     return left < 0 ? 0 : left;
   }
 
@@ -36,8 +48,21 @@ class EntitlementStore {
   Future<void> setPurchased(bool value) =>
       prefs.setBool(_purchasedKey, value);
 
+  /// Whether the hidden Prism BI trial-extension code has been redeemed.
+  bool get promoRedeemed => prefs.getBool(_promoRedeemedKey) ?? false;
+
+  /// Redeem the hidden Prism BI code (one-time) to add [promoTrialBonusDays]
+  /// to the free trial. Returns what happened so the UI can respond.
+  Future<TrialPromoResult> redeemPrismTrialExtension() async {
+    if (purchased) return TrialPromoResult.alreadyOwned;
+    if (promoRedeemed) return TrialPromoResult.alreadyRedeemed;
+    await prefs.setInt(_bonusDaysKey, bonusTrialDays + promoTrialBonusDays);
+    await prefs.setBool(_promoRedeemedKey, true);
+    return TrialPromoResult.granted;
+  }
+
   /// May the player start a game? True during the trial or after purchase.
-  bool get entitled => purchased || trialDaysUsed <= trialDays;
+  bool get entitled => purchased || trialDaysUsed <= trialDayAllowance;
 
   /// In the trial window (not yet purchased, still has free days).
   bool get inTrial => !purchased && entitled;
@@ -47,6 +72,8 @@ class EntitlementStore {
   /// Simulate an exhausted trial so the paywall appears.
   Future<void> devExpireTrial() async {
     await setPurchased(false);
+    await prefs.remove(_bonusDaysKey);
+    await prefs.remove(_promoRedeemedKey);
     await prefs.setStringList(_playDaysKey,
         ['2000-01-01', '2000-01-02', '2000-01-03', '2000-01-04']);
   }
@@ -54,7 +81,12 @@ class EntitlementStore {
   /// Back to a brand-new trial (locked features usable again, day 1).
   Future<void> devResetTrial() async {
     await setPurchased(false);
+    await prefs.remove(_bonusDaysKey);
+    await prefs.remove(_promoRedeemedKey);
     await prefs.remove(_playDaysKey);
     await recordOpenedToday();
   }
 }
+
+/// Outcome of trying to redeem the hidden trial-extension code.
+enum TrialPromoResult { granted, alreadyRedeemed, alreadyOwned }

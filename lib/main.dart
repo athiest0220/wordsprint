@@ -17,6 +17,21 @@ class SpeedBeeApp extends StatelessWidget {
       title: 'Word Sprint',
       debugShowCheckedModeBanner: false,
       theme: buildTheme(),
+      // Respect the OS text-size setting, but cap it: the game's custom
+      // layouts (letter bubbles, milestone tiles) break at the largest
+      // Dynamic Type sizes, so clamp scaling to a moderate maximum.
+      builder: (context, child) {
+        final mq = MediaQuery.of(context);
+        return MediaQuery(
+          data: mq.copyWith(
+            textScaler: mq.textScaler.clamp(
+              minScaleFactor: 1.0,
+              maxScaleFactor: 1.15,
+            ),
+          ),
+          child: child!,
+        );
+      },
       home: const _Bootstrap(),
     );
   }

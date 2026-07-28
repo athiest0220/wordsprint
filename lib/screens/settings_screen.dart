@@ -19,12 +19,14 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   late bool _clearOnWrong;
   late bool _haptics;
+  late bool _showOops;
 
   @override
   void initState() {
     super.initState();
     _clearOnWrong = widget.repo.settings.clearOnWrong;
     _haptics = widget.repo.settings.hapticsEnabled;
+    _showOops = widget.repo.settings.showOops;
   }
 
   Future<void> _confirmNewDay() async {
@@ -95,6 +97,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   setState(() => _haptics = v);
                   await widget.repo.settings.setHapticsEnabled(v);
                   if (v) HapticFeedback.mediumImpact();
+                },
+              ),
+            ),
+            Card(
+              child: SwitchListTile(
+                value: _showOops,
+                activeThumbColor: BeeColors.accent,
+                title: const Text('Show mistake counter'),
+                subtitle: const Text(
+                    'Shows the “Oops” count while you play, and on your shared '
+                    'result. Turn it off if tracking mistakes isn’t your thing.'),
+                onChanged: (v) async {
+                  setState(() => _showOops = v);
+                  await widget.repo.settings.setShowOops(v);
                 },
               ),
             ),

@@ -7,4 +7,4 @@
 ///   • the paywall's "unlock without paying" button, and
 ///   • the Settings "DEV — testing only" card (expire/reset trial).
 /// These MUST NOT ship to the public. Flip to false and rebuild for release.
-const bool kDevTools = true;
+const bool kDevTools = false;

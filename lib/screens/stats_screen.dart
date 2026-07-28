@@ -171,8 +171,12 @@ class _StatsScreenState extends State<StatsScreen> {
     if (s.oopsRate != null) {
       b.writeln('🙈 Oops rate ${(s.oopsRate! * 100).toStringAsFixed(0)}%');
     }
+    final box = context.findRenderObject() as RenderBox?;
     await Share.share(b.toString().trimRight(),
-        subject: 'My Word Sprint $label stats');
+        subject: 'My Word Sprint $label stats',
+        sharePositionOrigin: box != null && box.hasSize
+            ? box.localToGlobal(Offset.zero) & box.size
+            : null);
   }
 
   Future<void> _confirmReset() async {

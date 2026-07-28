@@ -28,6 +28,7 @@ String resultShareText({
   required int oopsCount,
   required int oopsAttempts,
   required int elapsedMs,
+  required bool showOops,
 }) {
   final total = puzzle.validWords.length;
   final pct = total == 0 ? 0 : (foundCount / total * 100).round();
@@ -53,7 +54,7 @@ String resultShareText({
   } else {
     b.writeln('⏱ Time ${formatClock(elapsedMs)}');
   }
-  if (oopsCount > 0 && oopsAttempts > 0) {
+  if (showOops && oopsCount > 0 && oopsAttempts > 0) {
     b.writeln('🙈 Oops ${(oopsCount / oopsAttempts * 100).round()}%');
   }
   return b.toString().trimRight();

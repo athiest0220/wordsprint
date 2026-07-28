@@ -43,6 +43,7 @@ class ResultsScreen extends StatelessWidget {
                 oopsCount: prog.oopsCount,
                 oopsAttempts: prog.foundWords.length + prog.oopsCount,
                 elapsedMs: prog.completeMs ?? prog.elapsedMs,
+                showOops: repo.settings.showOops,
               ),
             )),
           ),

@@ -118,7 +118,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       if (newRank != prevRank) {
         // Rank-up celebration takes priority over the points flash.
         if (_haptics) HapticFeedback.heavyImpact();
-        _showFlash('⬆  $newRank!', BeeColors.perfect);
+        _showFlash('⬆  $newRank!', rankColor(newRank));
       } else {
         if (_haptics) {
           (outcome.isPerfect || outcome.isPangram)
@@ -240,6 +240,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                   oopsCount: _c.oopsCount,
                   oopsAttempts: _c.answerAttempts,
                   elapsedMs: _c.elapsedMs,
+                  showOops: widget.repo.settings.showOops,
                 ),
               )),
             ),
@@ -338,11 +339,22 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
 
   Widget _rankRow() {
     final pct = (_c.foundFraction * 100).round();
+    final tierColor = rankColor(_c.rank);
     return Row(
       children: [
-        Text(_c.rank,
-            style: const TextStyle(
-                fontWeight: FontWeight.w700, color: BeeColors.accent)),
+        GestureDetector(
+          onTap: _showRanks,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(_c.rank,
+                  style: TextStyle(
+                      fontWeight: FontWeight.w700, color: tierColor)),
+              const SizedBox(width: 3),
+              Icon(Icons.info_outline, size: 14, color: tierColor),
+            ],
+          ),
+        ),
         const SizedBox(width: 10),
         Expanded(
           child: ClipRRect(
@@ -351,7 +363,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
               value: _c.rankFraction,
               minHeight: 8,
               backgroundColor: BeeColors.surfaceHi,
-              valueColor: const AlwaysStoppedAnimation(BeeColors.accent),
+              valueColor: AlwaysStoppedAnimation(tierColor),
             ),
           ),
         ),
@@ -386,16 +398,126 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     );
   }
 
+  /// Shows the full rank ladder with each tier's percentage range, so players
+  /// aiming for a target rank can see what's next.
+  void _showRanks() {
+    const tiers = Puzzle.rankTiers;
+    showDialog<void>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.55),
+      builder: (ctx) => Dialog(
+        backgroundColor: BeeColors.surface,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 18),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Expanded(
+                    child: Text('Ranks',
+                        style: TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.w800)),
+                  ),
+                  GestureDetector(
+                    onTap: () => Navigator.of(ctx).pop(),
+                    child: const Icon(Icons.close, color: BeeColors.muted),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'Your rank climbs as you earn more of the puzzle’s points. '
+                'Reach the next tier by passing its lower percentage.',
+                style: TextStyle(color: BeeColors.muted, height: 1.3),
+              ),
+              const SizedBox(height: 14),
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (int i = 0; i < tiers.length; i++)
+                        _rankLadderRow(
+                          label: tiers[i].key,
+                          lo: tiers[i].value,
+                          hi: i + 1 < tiers.length ? tiers[i + 1].value : null,
+                          current: tiers[i].key == _c.rank,
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _rankLadderRow({
+    required String label,
+    required double lo,
+    required double? hi,
+    required bool current,
+  }) {
+    final color = rankColor(label);
+    final range =
+        hi == null ? '100%' : '${(lo * 100).round()}–${(hi * 100).round()}%';
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: current ? color.withValues(alpha: 0.18) : BeeColors.surfaceHi,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: current ? color : Colors.transparent,
+          width: 1.5,
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(fontWeight: FontWeight.w800, color: color),
+            ),
+          ),
+          Text(
+            range,
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              color: current ? color : BeeColors.muted,
+            ),
+          ),
+          if (current) ...[
+            const SizedBox(width: 8),
+            Text('You',
+                style: TextStyle(
+                    color: color,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 12)),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _chipsRow() {
     final oopsPct = (_c.oopsRate * 100).round();
     return Row(
       children: [
         _infoChip('Min ${widget.puzzle.minWordLength}', BeeColors.muted),
-        const SizedBox(width: 8),
-        _infoChip(
-          _c.oopsCount == 0 ? 'Oops 0' : 'Oops ${_c.oopsCount} · $oopsPct%',
-          _c.oopsCount == 0 ? BeeColors.muted : BeeColors.bad,
-        ),
+        if (widget.repo.settings.showOops) ...[
+          const SizedBox(width: 8),
+          _infoChip(
+            _c.oopsCount == 0 ? 'Oops 0' : 'Oops ${_c.oopsCount} · $oopsPct%',
+            _c.oopsCount == 0 ? BeeColors.muted : BeeColors.bad,
+          ),
+        ],
       ],
     );
   }
@@ -531,6 +653,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   // ---- words sheet (with give-up reveal) ----
 
   void _openWordsSheet() {
+    bool alpha = false; // false = by length (default), true = A–Z
     showModalBottomSheet(
       context: context,
       backgroundColor: BeeColors.surface,
@@ -540,7 +663,8 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         return StatefulBuilder(
           builder: (sheetContext, setSheetState) {
             final reveal = _c.isEnded;
-            final words = reveal ? _c.allWordsSorted : _c.foundSorted;
+            final base = reveal ? _c.allWordsSorted : _c.foundSorted;
+            final words = alpha ? ([...base]..sort()) : base;
             return DraggableScrollableSheet(
               expand: false,
               initialChildSize: 0.55,
@@ -578,6 +702,22 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                       ],
                     ),
                   ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
+                    child: Row(
+                      children: [
+                        const Text('Sort',
+                            style: TextStyle(
+                                color: BeeColors.muted, fontSize: 13)),
+                        const SizedBox(width: 10),
+                        _sortChip('Length', !alpha,
+                            () => setSheetState(() => alpha = false)),
+                        const SizedBox(width: 6),
+                        _sortChip('A–Z', alpha,
+                            () => setSheetState(() => alpha = true)),
+                      ],
+                    ),
+                  ),
                   Expanded(
                     child: SingleChildScrollView(
                       controller: scroll,
@@ -598,6 +738,27 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
           },
         );
       },
+    );
+  }
+
+  Widget _sortChip(String label, bool selected, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        decoration: BoxDecoration(
+          color: selected ? BeeColors.accent : BeeColors.surfaceHi,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected ? const Color(0xFF0F1420) : BeeColors.muted,
+            fontWeight: FontWeight.w700,
+            fontSize: 13,
+          ),
+        ),
+      ),
     );
   }
 

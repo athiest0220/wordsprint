@@ -37,6 +37,27 @@ class BeeColors {
   static const muted = Color(0xFF8791A6);
 }
 
+/// Progressive rank colors — blue → violet → magenta → amber, climbing to the
+/// perfect-pangram gold at Flawless. Shared by the game and home screens.
+Color rankColor(String rank) {
+  switch (rank) {
+    case "Bachelor's":
+      return const Color(0xFF5B9BF0); // blue
+    case "Master's":
+      return const Color(0xFF8E7BEF); // indigo
+    case 'Doctorate':
+      return const Color(0xFFC56BE0); // purple
+    case 'Professor':
+      return const Color(0xFFF59E4B); // amber
+    case 'Flawless':
+      return BeeColors.perfect; // gold
+    case 'Student':
+      return const Color(0xFF8AA0C6); // steel blue
+    default:
+      return BeeColors.accent;
+  }
+}
+
 ThemeData buildTheme() {
   final base = ThemeData.dark(useMaterial3: true);
   return base.copyWith(

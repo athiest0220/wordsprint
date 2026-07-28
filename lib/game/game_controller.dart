@@ -244,6 +244,7 @@ class GameController extends ChangeNotifier {
         oopsCount: oopsCount,
         oopsAttempts: answerAttempts,
         elapsedMs: elapsedMs,
+        showOops: repo.settings.showOops,
       );
 
   void _persist() => repo.progress.save(progress);

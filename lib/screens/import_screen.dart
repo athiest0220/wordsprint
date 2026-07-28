@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../services/app_repository.dart';
+import '../services/entitlement_store.dart';
 import '../services/nyt_fetcher.dart';
 import '../theme.dart';
 import 'game_screen.dart';
@@ -70,6 +71,13 @@ class _ImportScreenState extends State<ImportScreen> {
     final others = _othersCtrl.text.trim().toUpperCase().split('')
       ..removeWhere((c) => c.trim().isEmpty);
 
+    // Hidden Prism BI code: center "I" plus the letters of PRISMBI (in any
+    // order) redeems a one-time free-trial extension instead of a puzzle.
+    if (_isPrismCode(center, others)) {
+      _redeemPrismCode();
+      return;
+    }
+
     if (center.length != 1) {
       setState(() => _error = 'Enter exactly one center letter.');
       return;
@@ -103,6 +111,56 @@ class _ImportScreenState extends State<ImportScreen> {
     Navigator.of(context).pushReplacement(MaterialPageRoute(
       builder: (_) => GameScreen(repo: widget.repo, puzzle: puzzle),
     ));
+  }
+
+  /// The hidden code: center "I" with the six letters of PRISMBI (P R I S M B,
+  /// in any order). Can never be a real import — it's only 6 unique letters.
+  bool _isPrismCode(String center, List<String> others) {
+    if (center != 'I') return false;
+    final sorted = (others.toList()..sort()).join();
+    return sorted == 'BIMPRS';
+  }
+
+  Future<void> _redeemPrismCode() async {
+    final ent = widget.repo.entitlement;
+    final result = await ent.redeemPrismTrialExtension();
+    if (!mounted) return;
+
+    final String title;
+    final String message;
+    switch (result) {
+      case TrialPromoResult.granted:
+        final left = ent.trialDaysLeft;
+        title = '🎉 Secret code unlocked!';
+        message = 'Nice find. Your free trial is extended by '
+            '${EntitlementStore.promoTrialBonusDays} days — '
+            'you now have $left ${left == 1 ? 'day' : 'days'} left. '
+            'Keep sprinting!';
+      case TrialPromoResult.alreadyRedeemed:
+        title = 'Already redeemed';
+        message = 'You’ve already used this code — the trial can only be '
+            'extended once.';
+      case TrialPromoResult.alreadyOwned:
+        title = 'You’re all set';
+        message = 'You already own the full game, so there’s nothing to '
+            'extend. Enjoy!';
+    }
+
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+    if (!mounted) return;
+    Navigator.of(context).pop(); // back to home; play is unlocked again
   }
 
   @override

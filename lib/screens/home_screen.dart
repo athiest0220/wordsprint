@@ -228,8 +228,20 @@ class _HomeScreenState extends State<HomeScreen> {
       statusChip = _chip('Revealed · ${progress.foundWords.length} found',
           BeeColors.muted, BeeColors.surfaceHi);
     } else if (inProgress) {
-      statusChip = _chip('▶ Resume · ${progress.foundWords.length} words',
-          BeeColors.accent, const Color(0xFF12233F));
+      // Show the player's current rank + word progress (rank tells them how
+      // close they are to their goal — more motivating than a bare count).
+      final puzzle = widget.repo.puzzleFor(_today, size);
+      final total = puzzle.validWords.length;
+      var score = 0;
+      for (final w in progress.foundWords) {
+        score += puzzle.scoreFor(w);
+      }
+      final rank = puzzle.rankFor(score);
+      final rc = rankColor(rank);
+      statusChip = _chip(
+          '▶ $rank · ${progress.foundWords.length}/$total',
+          rc,
+          rc.withValues(alpha: 0.14));
     } else {
       statusChip = _chip('Play', BeeColors.accent, const Color(0xFF12233F));
     }
@@ -240,32 +252,42 @@ class _HomeScreenState extends State<HomeScreen> {
         borderRadius: BorderRadius.circular(14),
         onTap: () => _open(size, completed),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           child: Row(
             children: [
               _sizeBadge(size),
               const SizedBox(width: 12),
               Expanded(
-                child: RichText(
-                  text: TextSpan(
-                    style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: BeeColors.cellText),
-                    children: [
-                      TextSpan(text: '$size Letters'),
-                      TextSpan(
-                        text: '   $minLen+ letter words',
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    RichText(
+                      text: TextSpan(
                         style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400,
-                            color: BeeColors.muted),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: BeeColors.cellText),
+                        children: [
+                          TextSpan(text: '$size Letters'),
+                          TextSpan(
+                            text: '   $minLen+ letter words',
+                            style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w400,
+                                color: BeeColors.muted),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 10),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: statusChip,
+                    ),
+                  ],
                 ),
               ),
-              statusChip,
             ],
           ),
         ),
