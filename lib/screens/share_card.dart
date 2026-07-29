@@ -180,7 +180,7 @@ class _ResultCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final total = puzzle.validWords.length;
     final pct = total == 0 ? 0 : (foundCount / total * 100).round();
-    final rank = puzzle.rankFor(score);
+    final rank = puzzle.rankFor(foundCount, total);
     final others = puzzle.letters.where((l) => l != puzzle.center).toList();
 
     return Container(

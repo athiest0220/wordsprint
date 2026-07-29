@@ -118,9 +118,12 @@ class Puzzle {
     MapEntry('Flawless', 1.0),
   ];
 
-  /// Rank label for a given accumulated score.
-  String rankFor(int score) {
-    final frac = maxScore == 0 ? 0.0 : score / maxScore;
+  /// Rank label for having found [foundCount] of [totalWords] words.
+  ///
+  /// Word-based on purpose: the whole UI shows word progress ("34 of 58"), so
+  /// the rank must climb with words found, not hidden per-word points.
+  String rankFor(int foundCount, int totalWords) {
+    final frac = totalWords == 0 ? 0.0 : foundCount / totalWords;
     var label = rankTiers.first.key;
     for (final tier in rankTiers) {
       if (frac >= tier.value) label = tier.key;
@@ -128,11 +131,12 @@ class Puzzle {
     return label;
   }
 
-  /// Score needed to reach the next rank above [score], or null if at the top.
-  int? scoreForNextRank(int score) {
-    final frac = maxScore == 0 ? 0.0 : score / maxScore;
+  /// Words needed to reach the next rank above [foundCount] of [totalWords],
+  /// or null if already at the top tier.
+  int? wordsForNextRank(int foundCount, int totalWords) {
+    final frac = totalWords == 0 ? 0.0 : foundCount / totalWords;
     for (final tier in rankTiers) {
-      if (tier.value > frac) return (tier.value * maxScore).ceil();
+      if (tier.value > frac) return (tier.value * totalWords).ceil();
     }
     return null;
   }

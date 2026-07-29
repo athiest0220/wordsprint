@@ -232,11 +232,7 @@ class _HomeScreenState extends State<HomeScreen> {
       // close they are to their goal — more motivating than a bare count).
       final puzzle = widget.repo.puzzleFor(_today, size);
       final total = puzzle.validWords.length;
-      var score = 0;
-      for (final w in progress.foundWords) {
-        score += puzzle.scoreFor(w);
-      }
-      final rank = puzzle.rankFor(score);
+      final rank = puzzle.rankFor(progress.foundWords.length, total);
       final rc = rankColor(rank);
       statusChip = _chip(
           '▶ $rank · ${progress.foundWords.length}/$total',

@@ -32,7 +32,7 @@ String resultShareText({
 }) {
   final total = puzzle.validWords.length;
   final pct = total == 0 ? 0 : (foundCount / total * 100).round();
-  final rank = puzzle.rankFor(score);
+  final rank = puzzle.rankFor(foundCount, total);
   final title = puzzle.title ?? '${puzzle.size} Letters';
 
   // Letters with the center highlighted, e.g.  "F"  B E G I R U

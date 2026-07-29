@@ -119,9 +119,8 @@ class GameController extends ChangeNotifier {
     return s;
   }
 
-  String get rank => puzzle.rankFor(score);
-  double get rankFraction =>
-      puzzle.maxScore == 0 ? 0 : (score / puzzle.maxScore).clamp(0, 1);
+  String get rank => puzzle.rankFor(foundCount, totalCount);
+  double get rankFraction => foundFraction.clamp(0, 1).toDouble();
 
   int? get pangramMs => progress.pangramMs;
   int? get perfectMs => progress.perfectMs;

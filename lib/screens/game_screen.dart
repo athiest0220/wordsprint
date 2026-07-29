@@ -430,7 +430,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
               ),
               const SizedBox(height: 6),
               const Text(
-                'Your rank climbs as you earn more of the puzzle’s points. '
+                'Your rank climbs as you find more of the puzzle’s words. '
                 'Reach the next tier by passing its lower percentage.',
                 style: TextStyle(color: BeeColors.muted, height: 1.3),
               ),
