@@ -98,7 +98,7 @@ class _HowToScreenState extends State<HowToScreen> {
       _b('New letters', BeeColors.accent),
       _t(' — roll a fresh practice puzzle anytime (practice results can’t be '
           'shared).\n• '),
-      _b('Today’s Spelling Bee', BeeColors.accent),
+      _b('Today’s Puzzle', BeeColors.accent),
       _t(' — import that day’s outside puzzle and race it.\n• '),
       _b('Give up', BeeColors.accent),
       _t(' — reveal every word; your score locks in where it is.\n• '),

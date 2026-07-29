@@ -49,7 +49,7 @@ class _ImportScreenState extends State<ImportScreen> {
         letters: bee.letters,
         center: bee.center,
         customKey: key,
-        title: 'Today’s Spelling Bee',
+        title: 'Today’s Puzzle',
       );
       if (!mounted) return;
       Navigator.of(context).pushReplacement(MaterialPageRoute(
@@ -166,7 +166,7 @@ class _ImportScreenState extends State<ImportScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Import a Spelling Bee')),
+      appBar: AppBar(title: const Text('Import a Puzzle')),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
@@ -177,7 +177,7 @@ class _ImportScreenState extends State<ImportScreen> {
             ),
             const SizedBox(height: 8),
             const Text(
-              'Grab today’s Spelling Bee and play it against the clock. '
+              'Grab today’s 7-letter puzzle and play it against the clock. '
               'Fetch it automatically, or type the letters in yourself.',
               style: TextStyle(color: BeeColors.muted, height: 1.4),
             ),

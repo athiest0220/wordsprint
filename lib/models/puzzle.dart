@@ -29,7 +29,7 @@ class Puzzle {
   /// Pangrams that are exactly [size] letters long — use each letter once.
   final Set<String> perfectPangrams;
 
-  /// Sum of the points of every valid word — the "Queen Bee" ceiling.
+  /// Sum of the points of every valid word — the "Flawless" ceiling.
   final int maxScore;
 
   /// When set, overrides the date-based [key] — used for imported/custom
@@ -106,10 +106,9 @@ class Puzzle {
           '${date.month.toString().padLeft(2, '0')}-'
           '${date.day.toString().padLeft(2, '0')}#$size';
 
-  /// Rank tiers as (label, fractionOfMax) pairs, ascending. Mirrors the NYT
-  /// ladder: Genius unlocks at 70%, Queen Bee at 100%.
+  /// Rank tiers as (label, fractionOfMax) pairs, ascending.
   /// Academic-themed ranks (fits the book/dictionary motif). Professor is the
-  /// motivating "Genius"-level tier (70%); Flawless is every word (100%).
+  /// motivating high tier (90%); Flawless is every word (100%).
   static const List<MapEntry<String, double>> rankTiers = [
     MapEntry('Student', 0.0),
     MapEntry("Bachelor's", 0.25),

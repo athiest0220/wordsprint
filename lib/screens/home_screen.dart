@@ -194,7 +194,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Today’s Spelling Bee',
+                    Text('Today’s Puzzle',
                         style: TextStyle(
                             fontSize: 16, fontWeight: FontWeight.w700)),
                     Text('Time yourself against today’s puzzle',

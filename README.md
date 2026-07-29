@@ -6,7 +6,7 @@ games a day), then race three clocks:
 1. **⏱ Time to pangram** — first word using all the letters
 2. **⭐ Time to perfect pangram** — first word using each letter *exactly once*
    (only some days have one)
-3. **🏁 Time to complete** — every valid word found (Queen Bee)
+3. **🏁 Time to complete** — every valid word found (Flawless)
 
 Career **averages and best times** are kept per size and overall.
 
@@ -40,7 +40,8 @@ Built with **Flutter** (one codebase → Android + iOS). Everything runs
 ## Scoring & ranks
 
 Minimum-length word = 1 point; longer words score their length; a pangram earns a
-`+size` bonus. Rank ladder runs Beginner → … → Genius (70%) → Queen Bee (100%).
+`+size` bonus. Rank ladder runs Student → Bachelor's → Master's → Doctorate →
+Professor (90%) → Flawless (100%).
 
 ---
 

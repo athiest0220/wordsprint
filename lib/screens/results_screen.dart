@@ -58,11 +58,11 @@ class ResultsScreen extends StatelessWidget {
               child: Text('🏆', style: TextStyle(fontSize: 56)),
             ),
             const Center(
-              child: Text('Queen Bee!',
+              child: Text('Flawless!',
                   style: TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.w800,
-                      color: BeeColors.accent)),
+                      color: BeeColors.perfect)),
             ),
             Center(
               child: Text(
