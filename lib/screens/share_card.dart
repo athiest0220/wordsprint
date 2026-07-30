@@ -68,7 +68,19 @@ class _ShareResultScreenState extends State<ShareResultScreen> {
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       final bytes = byteData!.buffer.asUint8List();
       final dir = await getTemporaryDirectory();
-      final file = await File('${dir.path}/word_sprint_result.png')
+      // Write to a UNIQUE filename each share. Reusing one fixed path made
+      // Android messaging apps cache the attachment by its (unchanging) URI and
+      // re-serve a stale card from a previous share. A fresh name = fresh URI.
+      // Best-effort: sweep old result images so temp doesn't accumulate.
+      try {
+        for (final f in dir.listSync()) {
+          if (f is File && f.path.contains('word_sprint_result')) {
+            f.deleteSync();
+          }
+        }
+      } catch (_) {}
+      final stamp = DateTime.now().millisecondsSinceEpoch;
+      final file = await File('${dir.path}/word_sprint_result_$stamp.png')
           .writeAsBytes(bytes);
       // Image only — the card already shows everything, so no text caption.
       await Share.shareXFiles([XFile(file.path)],
