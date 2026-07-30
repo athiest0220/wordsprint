@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import '../lib/services/dictionary.dart';
 import '../lib/services/puzzle_engine.dart';
@@ -10,7 +11,19 @@ void main(List<String> args) {
   final size = int.parse(args[3]);
   final text = File('assets/words.txt').readAsStringSync();
   final dict = Dictionary.fromText(text);
-  final engine = PuzzleEngine(dict);
+  // Load the precomputed daily pools the same way the app does, so this preview
+  // matches what actually ships.
+  final poolsRaw =
+      jsonDecode(File('assets/daily_pools.json').readAsStringSync())
+          as Map<String, dynamic>;
+  final dailyPools = <int, List<List<String>>>{
+    for (final e in poolsRaw.entries)
+      int.parse(e.key): [
+        for (final entry in (e.value as List))
+          [for (final s in (entry as List)) s as String]
+      ]
+  };
+  final engine = PuzzleEngine(dict, dailyPools: dailyPools);
   final p = engine.generate(DateTime(y, m, d), size);
   final words = p.validWords.toList()..sort();
   stdout.writeln('CENTER=${p.center}');
