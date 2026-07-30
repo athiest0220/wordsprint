@@ -1,13 +1,10 @@
-import 'dart:io';
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../models/puzzle.dart';
 import '../theme.dart';
+import '../util/brand.dart';
 import '../util/format.dart';
+import '../util/share_image.dart';
 import '../util/share_text.dart';
 
 /// Shows a rendered "result card" (with the real logo) and shares it as an
@@ -62,32 +59,14 @@ class _ShareResultScreenState extends State<ShareResultScreen> {
   Future<void> _shareImage() async {
     setState(() => _busy = true);
     try {
-      final boundary =
-          _cardKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
-      final image = await boundary.toImage(pixelRatio: 3.0);
-      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-      final bytes = byteData!.buffer.asUint8List();
-      final dir = await getTemporaryDirectory();
-      // Write to a UNIQUE filename each share. Reusing one fixed path made
-      // Android messaging apps cache the attachment by its (unchanging) URI and
-      // re-serve a stale card from a previous share. A fresh name = fresh URI.
-      // Best-effort: sweep old result images so temp doesn't accumulate.
-      try {
-        for (final f in dir.listSync()) {
-          if (f is File && f.path.contains('word_sprint_result')) {
-            f.deleteSync();
-          }
-        }
-      } catch (_) {}
-      final stamp = DateTime.now().millisecondsSinceEpoch;
-      final file = await File('${dir.path}/word_sprint_result_$stamp.png')
-          .writeAsBytes(bytes);
-      // Image only — the card already shows everything, so no text caption.
-      await Share.shareXFiles([XFile(file.path)],
-          sharePositionOrigin: _shareOrigin());
-    } catch (_) {
-      await Share.share(_caption,
-          sharePositionOrigin: _shareOrigin()); // fallback if the image fails
+      // The card already shows everything (incl. the download URL footer), so
+      // the image carries the caption. The URL is also in [_caption] for the
+      // text fallback below.
+      await shareCapturedCard(
+        boundaryKey: _cardKey,
+        origin: _shareOrigin(),
+        fallbackText: _caption,
+      );
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -263,6 +242,13 @@ class _ResultCard extends StatelessWidget {
           const Text('Race the dictionary ⏱',
               textAlign: TextAlign.center,
               style: TextStyle(color: BeeColors.muted, fontSize: 12)),
+          const SizedBox(height: 6),
+          const Text(kWordSprintShareTag,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  color: BeeColors.accent,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700)),
         ],
       ),
     );

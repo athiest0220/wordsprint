@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../services/app_repository.dart';
 import '../models/stats.dart';
 import '../theme.dart';
 import '../util/format.dart';
+import 'stats_share_card.dart';
 
 /// Career averages and bests, per letter-count plus an overall roll-up.
 class StatsScreen extends StatefulWidget {
@@ -153,30 +153,12 @@ class _StatsScreenState extends State<StatsScreen> {
     );
   }
 
-  Future<void> _shareSize(String label, SizeStats s) async {
-    final b = StringBuffer('📖 Word Sprint — $label\n');
-    b.writeln('Games played ${s.gamesStarted}, completed ${s.gamesCompleted}');
-    if (s.pangramCount > 0) {
-      b.writeln('🐝 Pangram   avg ${formatClockShort(s.avgPangramMs)}'
-          '  best ${formatClockShort(s.pangramBestMs)}');
-    }
-    if (s.perfectCount > 0) {
-      b.writeln('⭐ Perfect   avg ${formatClockShort(s.avgPerfectMs)}'
-          '  best ${formatClockShort(s.perfectBestMs)}');
-    }
-    if (s.completeCount > 0) {
-      b.writeln('🏁 Complete  avg ${formatClockShort(s.avgCompleteMs)}'
-          '  best ${formatClockShort(s.completeBestMs)}');
-    }
-    if (s.oopsRate != null) {
-      b.writeln('🙈 Oops rate ${(s.oopsRate! * 100).toStringAsFixed(0)}%');
-    }
-    final box = context.findRenderObject() as RenderBox?;
-    await Share.share(b.toString().trimRight(),
-        subject: 'My Word Sprint $label stats',
-        sharePositionOrigin: box != null && box.hasSize
-            ? box.localToGlobal(Offset.zero) & box.size
-            : null);
+  void _shareSize(String label, SizeStats s) {
+    // Open the rendered stats card, which shares as an image (with the
+    // download-URL footer) — the stats counterpart to the result share.
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => StatsShareScreen(label: label, stats: s),
+    ));
   }
 
   Future<void> _confirmReset() async {

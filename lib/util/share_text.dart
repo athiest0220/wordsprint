@@ -1,4 +1,5 @@
 import '../models/puzzle.dart';
+import 'brand.dart';
 import 'format.dart';
 
 String _rankEmoji(String rank) {
@@ -57,5 +58,6 @@ String resultShareText({
   if (showOops && oopsCount > 0 && oopsAttempts > 0) {
     b.writeln('🙈 Oops ${(oopsCount / oopsAttempts * 100).round()}%');
   }
+  b.writeln(kWordSprintShareTag);
   return b.toString().trimRight();
 }
