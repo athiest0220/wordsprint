@@ -77,6 +77,10 @@ class _ImportScreenState extends State<ImportScreen> {
       _redeemPrismCode();
       return;
     }
+    if (_isWafflesCode(center, others)) {
+      _redeemWafflesCode();
+      return;
+    }
 
     if (center.length != 1) {
       setState(() => _error = 'Enter exactly one center letter.');
@@ -99,7 +103,7 @@ class _ImportScreenState extends State<ImportScreen> {
       letters: letters,
       center: center,
       customKey: key,
-      title: 'Imported Bee',
+      title: 'Imported Puzzle',
     );
 
     if (puzzle.validWords.isEmpty) {
@@ -121,9 +125,27 @@ class _ImportScreenState extends State<ImportScreen> {
     return sorted == 'BIMPRS';
   }
 
-  Future<void> _redeemPrismCode() async {
+  /// The hidden "WAFFLES" code: center "F" plus the other six letters of
+  /// WAFFLES (W A F L E S, in any order — the second F sits among the six).
+  /// Redeems a one-time 7-day trial extension. Independent of the Prism code.
+  bool _isWafflesCode(String center, List<String> others) {
+    if (center != 'F') return false;
+    final sorted = (others.toList()..sort()).join();
+    return sorted == 'AEFLSW';
+  }
+
+  Future<void> _redeemPrismCode() => _redeemTrialCode(
+      widget.repo.entitlement.redeemPrismTrialExtension,
+      EntitlementStore.promoTrialBonusDays);
+
+  Future<void> _redeemWafflesCode() => _redeemTrialCode(
+      widget.repo.entitlement.redeemWafflesTrialExtension,
+      EntitlementStore.wafflesTrialBonusDays);
+
+  Future<void> _redeemTrialCode(
+      Future<TrialPromoResult> Function() redeem, int bonusDays) async {
     final ent = widget.repo.entitlement;
-    final result = await ent.redeemPrismTrialExtension();
+    final result = await redeem();
     if (!mounted) return;
 
     final String title;
@@ -133,7 +155,7 @@ class _ImportScreenState extends State<ImportScreen> {
         final left = ent.trialDaysLeft;
         title = '🎉 Secret code unlocked!';
         message = 'Nice find. Your free trial is extended by '
-            '${EntitlementStore.promoTrialBonusDays} days — '
+            '$bonusDays days — '
             'you now have $left ${left == 1 ? 'day' : 'days'} left. '
             'Keep sprinting!';
       case TrialPromoResult.alreadyRedeemed:

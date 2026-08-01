@@ -9,12 +9,16 @@ class EntitlementStore {
   static const _playDaysKey = 'speedbee.playDays';
   static const _bonusDaysKey = 'speedbee.bonusTrialDays';
   static const _promoRedeemedKey = 'speedbee.prismPromoRedeemed';
+  static const _wafflesRedeemedKey = 'speedbee.wafflesPromoRedeemed';
 
   /// Number of free trial days (distinct days played).
   static const trialDays = 3;
 
   /// Extra trial days granted by redeeming the hidden Prism BI code.
   static const promoTrialBonusDays = 5;
+
+  /// Extra trial days granted by redeeming the hidden "WAFFLES" code.
+  static const wafflesTrialBonusDays = 7;
 
   final SharedPreferences prefs;
   EntitlementStore(this.prefs);
@@ -61,6 +65,19 @@ class EntitlementStore {
     return TrialPromoResult.granted;
   }
 
+  /// Whether the hidden "WAFFLES" trial-extension code has been redeemed.
+  bool get wafflesRedeemed => prefs.getBool(_wafflesRedeemedKey) ?? false;
+
+  /// Redeem the hidden "WAFFLES" code (one-time) to add [wafflesTrialBonusDays]
+  /// to the free trial. Independent of the Prism BI code.
+  Future<TrialPromoResult> redeemWafflesTrialExtension() async {
+    if (purchased) return TrialPromoResult.alreadyOwned;
+    if (wafflesRedeemed) return TrialPromoResult.alreadyRedeemed;
+    await prefs.setInt(_bonusDaysKey, bonusTrialDays + wafflesTrialBonusDays);
+    await prefs.setBool(_wafflesRedeemedKey, true);
+    return TrialPromoResult.granted;
+  }
+
   /// May the player start a game? True during the trial or after purchase.
   bool get entitled => purchased || trialDaysUsed <= trialDayAllowance;
 
@@ -74,6 +91,7 @@ class EntitlementStore {
     await setPurchased(false);
     await prefs.remove(_bonusDaysKey);
     await prefs.remove(_promoRedeemedKey);
+    await prefs.remove(_wafflesRedeemedKey);
     await prefs.setStringList(_playDaysKey,
         ['2000-01-01', '2000-01-02', '2000-01-03', '2000-01-04']);
   }
@@ -83,6 +101,7 @@ class EntitlementStore {
     await setPurchased(false);
     await prefs.remove(_bonusDaysKey);
     await prefs.remove(_promoRedeemedKey);
+    await prefs.remove(_wafflesRedeemedKey);
     await prefs.remove(_playDaysKey);
     await recordOpenedToday();
   }
