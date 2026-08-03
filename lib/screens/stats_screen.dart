@@ -61,7 +61,7 @@ class _StatsScreenState extends State<StatsScreen> {
                         color: BeeColors.accent)),
                 const Spacer(),
                 Text('${s.gamesCompleted} done / ${s.gamesStarted} played',
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 12, color: BeeColors.muted)),
                 if (s.gamesStarted > 0 || s.gamesEnded > 0)
                   IconButton(
@@ -81,10 +81,10 @@ class _StatsScreenState extends State<StatsScreen> {
                 s.perfectCount),
             _statLine('🏁 Complete', s.avgCompleteMs, s.completeBestMs,
                 s.completeCount),
-            const Divider(height: 14, color: BeeColors.surfaceHi),
+            Divider(height: 14, color: BeeColors.surfaceHi),
             Row(
               children: [
-                const Expanded(
+                Expanded(
                   flex: 4,
                   child: Text('🙈 Oops rate',
                       style: TextStyle(color: BeeColors.outerCellText)),
@@ -117,7 +117,7 @@ class _StatsScreenState extends State<StatsScreen> {
           Expanded(
               flex: 4,
               child: Text(label,
-                  style: const TextStyle(color: BeeColors.outerCellText))),
+                  style: TextStyle(color: BeeColors.outerCellText))),
           Expanded(
             flex: 3,
             child: _kv('avg', formatClockShort(avg)),
@@ -130,7 +130,7 @@ class _StatsScreenState extends State<StatsScreen> {
             flex: 2,
             child: Text('×$count',
                 textAlign: TextAlign.right,
-                style: const TextStyle(color: BeeColors.muted, fontSize: 12)),
+                style: TextStyle(color: BeeColors.muted, fontSize: 12)),
           ),
         ],
       ),
@@ -144,7 +144,7 @@ class _StatsScreenState extends State<StatsScreen> {
       textBaseline: TextBaseline.alphabetic,
       children: [
         Text('$k ',
-            style: const TextStyle(color: BeeColors.muted, fontSize: 11)),
+            style: TextStyle(color: BeeColors.muted, fontSize: 11)),
         Text(v,
             style: const TextStyle(
                 fontWeight: FontWeight.w700,

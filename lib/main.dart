@@ -13,26 +13,36 @@ class SpeedBeeApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Word Sprint',
-      debugShowCheckedModeBanner: false,
-      theme: buildTheme(),
-      // Respect the OS text-size setting, but cap it: the game's custom
-      // layouts (letter bubbles, milestone tiles) break at the largest
-      // Dynamic Type sizes, so clamp scaling to a moderate maximum.
-      builder: (context, child) {
-        final mq = MediaQuery.of(context);
-        return MediaQuery(
-          data: mq.copyWith(
-            textScaler: mq.textScaler.clamp(
-              minScaleFactor: 1.0,
-              maxScaleFactor: 1.15,
-            ),
-          ),
-          child: child!,
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: appThemeMode,
+      builder: (context, mode, _) {
+        return MaterialApp(
+          title: 'Word Sprint',
+          debugShowCheckedModeBanner: false,
+          theme: buildLightTheme(),
+          darkTheme: buildDarkTheme(),
+          themeMode: mode,
+          // Respect the OS text-size setting, but cap it: the game's custom
+          // layouts (letter bubbles, milestone tiles) break at the largest
+          // Dynamic Type sizes, so clamp scaling to a moderate maximum.
+          builder: (context, child) {
+            // Sync the brightness-aware BeeColors getters to the active theme
+            // before any descendant builds this frame.
+            BeeColors.brightness = Theme.of(context).brightness;
+            final mq = MediaQuery.of(context);
+            return MediaQuery(
+              data: mq.copyWith(
+                textScaler: mq.textScaler.clamp(
+                  minScaleFactor: 1.0,
+                  maxScaleFactor: 1.15,
+                ),
+              ),
+              child: child!,
+            );
+          },
+          home: const _Bootstrap(),
         );
       },
-      home: const _Bootstrap(),
     );
   }
 }
@@ -45,13 +55,38 @@ class _Bootstrap extends StatefulWidget {
   State<_Bootstrap> createState() => _BootstrapState();
 }
 
-class _BootstrapState extends State<_Bootstrap> {
+class _BootstrapState extends State<_Bootstrap> with WidgetsBindingObserver {
   late final Future<AppRepository> _future;
+  AppRepository? _repo;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _future = AppRepository.initialize();
+    _future.then((repo) {
+      _repo = repo;
+      // Apply the saved Light/Dark/System preference once settings are loaded.
+      appThemeMode.value = repo.settings.themeMode;
+      // Kick off the looping background music (no-op if disabled).
+      repo.audio.startMusic();
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Don't let the loop play over other apps or on the lock screen.
+    if (state == AppLifecycleState.resumed) {
+      _repo?.audio.resumeMusicIfEnabled();
+    } else {
+      _repo?.audio.pauseMusic();
+    }
   }
 
   @override

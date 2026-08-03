@@ -16,7 +16,9 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "com.wordsprint.wordsprint"
-    compileSdk = flutter.compileSdkVersion
+    // Bumped from flutter.compileSdkVersion (33) — the vibration package and its
+    // transitive androidx dependencies require compiling against API 36+.
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

@@ -4,8 +4,10 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/puzzle.dart';
+import 'audio_service.dart';
 import 'dictionary.dart';
 import 'entitlement_store.dart';
+import 'haptics_service.dart';
 import 'progress_store.dart';
 import 'puzzle_engine.dart';
 import 'purchase_service.dart';
@@ -22,12 +24,15 @@ class AppRepository {
   final SettingsStore settings;
   final EntitlementStore entitlement;
   final PurchaseService purchases;
+  final AudioService audio;
+  final HapticsService haptics;
 
   // Small cache so re-entering a puzzle doesn't regenerate it.
   final Map<String, Puzzle> _cache = {};
 
   AppRepository._(this.dictionary, this.engine, this.stats, this.progress,
-      this.settings, this.entitlement, this.purchases);
+      this.settings, this.entitlement, this.purchases, this.audio,
+      this.haptics);
 
   static Future<AppRepository> initialize() async {
     final text = await rootBundle.loadString('assets/words.txt');
@@ -51,8 +56,12 @@ class AppRepository {
     await entitlement.recordOpenedToday(); // counts one trial day per date
     final purchases = PurchaseService(entitlement);
     await purchases.init();
-    return AppRepository._(
-        dict, engine, stats, progress, settings, entitlement, purchases);
+    final audio = AudioService(settings);
+    await audio.init(); // preload SFX; failures are swallowed inside init()
+    final haptics = HapticsService(settings);
+    await haptics.init();
+    return AppRepository._(dict, engine, stats, progress, settings, entitlement,
+        purchases, audio, haptics);
   }
 
   /// Today's puzzle for [size] at the current reroll variant, generating (and

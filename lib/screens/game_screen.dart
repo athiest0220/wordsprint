@@ -45,6 +45,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         widget.puzzle.letters.where((l) => l != widget.puzzle.center).toList();
     WidgetsBinding.instance.addObserver(this);
     _c.start();
+    widget.repo.audio.start(); // round-start chime
   }
 
   @override
@@ -93,11 +94,10 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     });
   }
 
-  bool get _haptics => widget.repo.settings.hapticsEnabled;
-
   void _tapLetter(String letter) {
     if (_c.isEnded) return;
-    if (_haptics) HapticFeedback.selectionClick();
+    widget.repo.haptics.tap();
+    widget.repo.audio.tap();
     setState(() => _current += letter);
   }
 
@@ -116,15 +116,16 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     if (outcome.accepted) {
       final newRank = _c.rank;
       if (newRank != prevRank) {
-        // Rank-up celebration takes priority over the points flash.
-        if (_haptics) HapticFeedback.heavyImpact();
+        // Rank-up celebration: distinct fanfare + strong buzz, takes priority
+        // over the normal accepted-word blip and points flash.
+        widget.repo.audio.rankup();
+        widget.repo.haptics.strong();
         _showFlash('⬆  $newRank!', rankColor(newRank));
       } else {
-        if (_haptics) {
-          (outcome.isPerfect || outcome.isPangram)
-              ? HapticFeedback.mediumImpact()
-              : HapticFeedback.lightImpact();
-        }
+        widget.repo.audio.valid();
+        (outcome.isPerfect || outcome.isPangram)
+            ? widget.repo.haptics.strong()
+            : widget.repo.haptics.success();
         _showFlash(
             outcome.message,
             outcome.isPerfect
@@ -134,9 +135,14 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                     : BeeColors.good);
       }
       setState(() => _current = '');
-      if (_c.isComplete) _goToResults();
+      if (_c.isComplete) {
+        widget.repo.audio.end(); // round-complete chime
+        widget.repo.haptics.strong();
+        _goToResults();
+      }
     } else if (outcome.status != SubmitStatus.empty) {
-      if (_haptics) HapticFeedback.heavyImpact();
+      widget.repo.audio.invalid();
+      widget.repo.haptics.error();
       _showFlash(outcome.message, BeeColors.bad);
       // Clear the entry after a wrong word if the setting says so (default),
       // otherwise leave it for the player to edit/delete themselves.
@@ -216,7 +222,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
             Text(p.title ?? '${p.size} Letters',
                 style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
             Text('words must be ${p.minWordLength}+ letters',
-                style: const TextStyle(fontSize: 11, color: BeeColors.muted)),
+                style: TextStyle(fontSize: 11, color: BeeColors.muted)),
           ],
         ),
         actions: [
@@ -326,11 +332,11 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         ),
         child: Text(
           formatClock(_c.isEnded ? _c.completeMs ?? _c.elapsedMs : _c.elapsedMs),
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w700,
             color: BeeColors.muted,
-            fontFeatures: [FontFeature.tabularFigures()],
+            fontFeatures: const [FontFeature.tabularFigures()],
           ),
         ),
       ),
@@ -385,9 +391,9 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                   const SizedBox(width: 6),
                   Text('$pct%',
                       style:
-                          const TextStyle(color: BeeColors.muted, fontSize: 12)),
+                          TextStyle(color: BeeColors.muted, fontSize: 12)),
                   const SizedBox(width: 4),
-                  const Icon(Icons.chevron_right,
+                  Icon(Icons.chevron_right,
                       size: 16, color: BeeColors.muted),
                 ],
               ),
@@ -424,12 +430,12 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                   ),
                   GestureDetector(
                     onTap: () => Navigator.of(ctx).pop(),
-                    child: const Icon(Icons.close, color: BeeColors.muted),
+                    child: Icon(Icons.close, color: BeeColors.muted),
                   ),
                 ],
               ),
               const SizedBox(height: 6),
-              const Text(
+              Text(
                 'Your rank climbs as you find more of the puzzle’s words. '
                 'Reach the next tier by passing its lower percentage.',
                 style: TextStyle(color: BeeColors.muted, height: 1.3),
@@ -603,7 +609,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
               if (_current.isEmpty)
                 TextSpan(
                     text: _c.isEnded ? 'Game over for today' : 'Type or tap letters',
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 16,
                         color: BeeColors.muted,
                         fontWeight: FontWeight.w400,
@@ -636,7 +642,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     final style = outlined
         ? OutlinedButton.styleFrom(
             foregroundColor: BeeColors.cellText,
-            side: const BorderSide(color: BeeColors.surfaceHi),
+            side: BorderSide(color: BeeColors.surfaceHi),
             padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
             shape: const StadiumBorder(),
           )
@@ -706,7 +712,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
                     child: Row(
                       children: [
-                        const Text('Sort',
+                        Text('Sort',
                             style: TextStyle(
                                 color: BeeColors.muted, fontSize: 13)),
                         const SizedBox(width: 10),

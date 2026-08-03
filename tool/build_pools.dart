@@ -37,6 +37,30 @@ bool _blocked(String w) {
   return false;
 }
 
+// --- rare-letter balancing (weight toward natural English frequency) ---
+
+/// Letters never allowed as the required CENTER at ANY size — the brutal four.
+const _noCenterLetters = 'jqzx';
+
+/// Also barred from the center on small sizes (6-9), where clean common words
+/// are plentiful. V and W ARE allowed as centers on 10-11, where permitting them
+/// widens the pools without resorting to obscure words.
+const _noCenterSmall = 'vw';
+
+/// The four hardest letters. A set may contain at most one of these, and sets
+/// with none ("clean") are strongly preferred when filling each pool, so J/Q/Z/X
+/// show up only as an occasional bonus outer letter.
+const _veryRareLetters = 'jqzx';
+
+/// How many very-rare letters a set contains.
+int _veryRareCount(int mask) {
+  var n = 0;
+  for (final ch in _veryRareLetters.split('')) {
+    if (mask & Dictionary.maskOf(ch) != 0) n++;
+  }
+  return n;
+}
+
 /// Rebuilds assets/daily_pools.json for ALL sizes (6-11) so every daily puzzle
 /// is anchored on a COMMON word (its pangram is something people know), never
 /// repeats within a long cycle, and keeps word-root near-twins (bivouacking /
@@ -62,9 +86,13 @@ void main(List<String> args) {
     6: [30, 60, 120],
     7: [20, 38, 65],
     8: [16, 32, 58],
-    9: [12, 26, 52],
-    10: [8, 22, 55],
-    11: [5, 16, 55],
+    // Big sizes: ceilings widened. With rare letters barred from the center, a
+    // common-centered 9-11 puzzle naturally yields more words, and more findable
+    // words makes a big puzzle easier, not harder — so we accept the larger band
+    // rather than fall back on a brutal rare center to thin the word list.
+    9: [12, 40, 140],
+    10: [8, 34, 150],
+    11: [5, 26, 160],
   };
   // Common words with many distinct letters are scarce, so the big sizes look a
   // little deeper into the frequency list. Kept modest to stay out of jargon
@@ -113,6 +141,23 @@ void main(List<String> args) {
     final floor = band[0], target = band[1], ceil = band[2];
     final sizeTopN = topN * (1 + topNForSize[size]!);
 
+    // Rare-letter policy. J/Q/Z/X are never the required center at ANY size; on
+    // small sizes (6-9) V/W are also barred as centers, but 10-11 allow them so
+    // their pools stay full. The big-size ceilings above are widened so common-
+    // centered puzzles still qualify instead of needing a rare center to thin the
+    // word list. A set may carry at most one very-rare (J/Q/Z/X) letter on small
+    // sizes; big sizes, whose common words are naturally rarer, allow up to two.
+    // J/Q/Z/X are never the required center at ANY size. On 6-9, V/W are also
+    // barred (plenty of clean common words there). On 10-11, V/W are allowed as
+    // centers to keep those pools fuller — they repeat over a year rather than
+    // fall back on a brutal J/Q/Z/X center.
+    final noCenterStr =
+        size >= 10 ? _noCenterLetters : _noCenterLetters + _noCenterSmall;
+    final noCenterBits = {
+      for (final ch in noCenterStr.split('')) Dictionary.maskOf(ch)
+    };
+    final maxVeryRare = size >= 9 ? 2 : 1;
+
     // Unique common anchor letter-sets, most-common anchor kept per set.
     final maskAnchor = <int, String>{};
     final maskAnchorRank = <int, int>{};
@@ -135,6 +180,8 @@ void main(List<String> args) {
     // Evaluate each set: choose the center giving an in-band word count.
     final entries = <_Entry>[];
     for (final setMask in candidates) {
+      // Balance: cap how many very-rare letters a set may carry (size-aware).
+      if (_veryRareCount(setMask) > maxVeryRare) continue;
       final notSet = ~setMask;
       final counts = <int, int>{}; // centerBit -> #valid words containing it
       for (var i = 0; i < fMask.length; i++) {
@@ -151,6 +198,7 @@ void main(List<String> args) {
       int? bestCenter;
       var bestDelta = 1 << 30;
       for (final cb in _bitsOf(setMask)) {
+        if (noCenterBits.contains(cb)) continue; // rare letters never center
         final cnt = counts[cb] ?? 0;
         if (cnt < floor || cnt > ceil) continue;
         final d = (cnt - target).abs();
@@ -175,11 +223,30 @@ void main(List<String> args) {
       deduped.add(e);
     }
 
-    // Deterministic shuffle, then greedily space out similar letter-sets so
-    // adjacent days feel different.
-    deduped.shuffle(Random(918273 + size));
-    final ordered = _greedySpace(deduped);
-    final finalList = ordered.take(366).toList();
+    // Prefer common-letter sets; sets carrying a very-rare letter (J/Q/Z/X) get
+    // only a small quota so rare letters are an occasional bonus, not the norm.
+    // On big sizes, where clean common words are scarce, more rare sets are
+    // pulled in to reach a usable pool. Deterministic shuffle + greedy spacing
+    // keep adjacent days feeling different.
+    const cap = 366;
+    final clean = deduped.where((e) => _veryRareCount(e.setMask) == 0).toList()
+      ..shuffle(Random(918273 + size));
+    final rare = deduped.where((e) => _veryRareCount(e.setMask) >= 1).toList()
+      ..shuffle(Random(613 + size));
+    final cleanSpaced = _greedySpace(clean);
+    final rareSpaced = _greedySpace(rare);
+    final maxRare = (cap * 0.08).round(); // ~8% may carry a rare letter
+    var nRare = rareSpaced.length < maxRare ? rareSpaced.length : maxRare;
+    var nClean = (cap - nRare).clamp(0, cleanSpaced.length);
+    if (nClean + nRare < cap) {
+      // clean is scarce (big sizes) — let rare fill the remainder
+      nRare = (cap - nClean).clamp(0, rareSpaced.length);
+    }
+    final combined = [
+      ...cleanSpaced.take(nClean),
+      ...rareSpaced.take(nRare),
+    ];
+    final finalList = _greedySpace(combined).take(cap).toList();
 
     pools[size.toString()] = [
       for (final e in finalList) [_lettersOf(e.setMask), _letterOf(e.center)]

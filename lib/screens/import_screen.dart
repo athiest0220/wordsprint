@@ -198,7 +198,7 @@ class _ImportScreenState extends State<ImportScreen> {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Grab today’s 7-letter puzzle and play it against the clock. '
               'Fetch it automatically, or type the letters in yourself.',
               style: TextStyle(color: BeeColors.muted, height: 1.4),
@@ -225,11 +225,11 @@ class _ImportScreenState extends State<ImportScreen> {
                   : 'Get today’s puzzle'),
             ),
             const SizedBox(height: 20),
-            const Row(
+            Row(
               children: [
                 Expanded(child: Divider(color: BeeColors.surfaceHi)),
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: Text('or enter manually',
                       style: TextStyle(color: BeeColors.muted, fontSize: 12)),
                 ),
@@ -286,18 +286,18 @@ class _ImportScreenState extends State<ImportScreen> {
   }
 
   Widget _label(String t) => Text(t,
-      style: const TextStyle(fontWeight: FontWeight.w600, color: BeeColors.muted));
+      style: TextStyle(fontWeight: FontWeight.w600, color: BeeColors.muted));
 
   InputDecoration _boxDeco(String hint) => InputDecoration(
         counterText: '',
         hintText: hint,
-        hintStyle: const TextStyle(
+        hintStyle: TextStyle(
             color: BeeColors.muted, letterSpacing: 2, fontWeight: FontWeight.w400),
         filled: true,
         fillColor: BeeColors.surface,
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: BeeColors.surfaceHi),
+          borderSide: BorderSide(color: BeeColors.surfaceHi),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),

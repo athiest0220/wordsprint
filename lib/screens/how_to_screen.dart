@@ -128,7 +128,7 @@ class _HowToScreenState extends State<HowToScreen> {
           if (!last)
             TextButton(
                 onPressed: _finish,
-                child: const Text('Skip',
+                child: Text('Skip',
                     style: TextStyle(color: BeeColors.muted))),
         ],
       ),
@@ -161,7 +161,7 @@ class _HowToScreenState extends State<HowToScreen> {
                         RichText(
                           textAlign: TextAlign.center,
                           text: TextSpan(
-                            style: const TextStyle(
+                            style: TextStyle(
                                 fontSize: 16,
                                 height: 1.5,
                                 color: BeeColors.cellText),

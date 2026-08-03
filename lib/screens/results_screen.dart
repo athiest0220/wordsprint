@@ -68,13 +68,13 @@ class ResultsScreen extends StatelessWidget {
               child: Text(
                 'All ${puzzle.validWords.length} words • '
                 '${puzzle.pangrams.length} pangrams',
-                style: const TextStyle(color: BeeColors.muted),
+                style: TextStyle(color: BeeColors.muted),
               ),
             ),
             Center(
               child: Text(
                 _oopsLine(prog),
-                style: const TextStyle(color: BeeColors.muted, fontSize: 13),
+                style: TextStyle(color: BeeColors.muted, fontSize: 13),
               ),
             ),
             const SizedBox(height: 24),
@@ -140,7 +140,7 @@ class ResultsScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(label,
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 13, color: BeeColors.muted)),
                   const SizedBox(height: 2),
                   Text(
@@ -163,7 +163,7 @@ class ResultsScreen extends StatelessWidget {
                         fontSize: 12,
                         color: beatAvg ? BeeColors.good : BeeColors.muted)),
                 Text('best ${formatClockShort(bestMs)}',
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 12, color: BeeColors.muted)),
               ],
             ),

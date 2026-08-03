@@ -70,7 +70,7 @@ class BubbleCell extends StatelessWidget {
             Text(
               letter,
               style: TextStyle(
-                color: BeeColors.cellText,
+                color: BeeColors.bubbleText,
                 fontSize: d * 0.42,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 1,

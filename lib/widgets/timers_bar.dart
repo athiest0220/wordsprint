@@ -57,7 +57,7 @@ class TimersBar extends StatelessWidget {
             Column(
               children: [
                 Text('$icon $label',
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 11, color: BeeColors.muted, height: 1.2)),
                 const SizedBox(height: 2),
                 Text(

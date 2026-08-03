@@ -164,7 +164,7 @@ class _ResultCard extends StatelessWidget {
   Color _rankColor(String r) {
     if (r == 'Flawless') return BeeColors.perfect;
     if (r == 'Professor' || r == 'Doctorate') return BeeColors.accent;
-    return BeeColors.cellText;
+    return BeeColors.darkText;
   }
 
   @override
@@ -200,7 +200,7 @@ class _ResultCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(puzzle.title ?? '${puzzle.size} Letters',
-              style: const TextStyle(fontSize: 15, color: BeeColors.muted)),
+              style: const TextStyle(fontSize: 15, color: BeeColors.darkMuted)),
           const SizedBox(height: 16),
           Wrap(
             spacing: 7,
@@ -218,7 +218,7 @@ class _ResultCard extends StatelessWidget {
                   fontWeight: FontWeight.w900,
                   color: _rankColor(rank))),
           Text('$foundCount / $total words · $pct%',
-              style: const TextStyle(color: BeeColors.muted, fontSize: 14)),
+              style: const TextStyle(color: BeeColors.darkMuted, fontSize: 14)),
           const SizedBox(height: 18),
           Row(
             children: [
@@ -236,12 +236,12 @@ class _ResultCard extends StatelessWidget {
             const SizedBox(height: 10),
             Text('🙈 Oops ${(oopsCount / oopsAttempts * 100).round()}%',
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: BeeColors.muted, fontSize: 13)),
+                style: const TextStyle(color: BeeColors.darkMuted, fontSize: 13)),
           ],
           const SizedBox(height: 14),
           const Text('Race the dictionary ⏱',
               textAlign: TextAlign.center,
-              style: TextStyle(color: BeeColors.muted, fontSize: 12)),
+              style: TextStyle(color: BeeColors.darkMuted, fontSize: 12)),
           const SizedBox(height: 6),
           const Text(kWordSprintShareTag,
               textAlign: TextAlign.center,
@@ -261,13 +261,13 @@ class _ResultCard extends StatelessWidget {
       alignment: Alignment.center,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: center ? BeeColors.accent : BeeColors.surfaceHi,
+        color: center ? BeeColors.accent : BeeColors.darkSurfaceHi,
       ),
       child: Text(l,
           style: TextStyle(
               fontWeight: FontWeight.w800,
               fontSize: 16,
-              color: center ? const Color(0xFF0F1420) : BeeColors.cellText)),
+              color: center ? const Color(0xFF0F1420) : BeeColors.darkText)),
     );
   }
 
@@ -277,14 +277,14 @@ class _ResultCard extends StatelessWidget {
       child: Column(
         children: [
           Text('$icon $label',
-              style: const TextStyle(fontSize: 11, color: BeeColors.muted)),
+              style: const TextStyle(fontSize: 11, color: BeeColors.darkMuted)),
           const SizedBox(height: 2),
           Text(formatClock(ms),
               style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
                   fontFeatures: const [FontFeature.tabularFigures()],
-                  color: pending ? BeeColors.muted : color)),
+                  color: pending ? BeeColors.darkMuted : color)),
         ],
       ),
     );

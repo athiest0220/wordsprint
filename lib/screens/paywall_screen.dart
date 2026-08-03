@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../dev_flags.dart';
 import '../services/app_repository.dart';
+import '../services/entitlement_store.dart';
 import '../theme.dart';
 
 /// Shown when the free trial is over and the game isn't unlocked yet.
@@ -35,6 +36,83 @@ class _PaywallScreenState extends State<PaywallScreen> {
     }
   }
 
+  // --- hidden family-code redemption (works even after the trial expires) ---
+
+  int _logoTaps = 0;
+  void _onLogoTap() {
+    _logoTaps++;
+    if (_logoTaps >= 5) {
+      _logoTaps = 0;
+      _promptForCode();
+    }
+  }
+
+  Future<void> _promptForCode() async {
+    final ctrl = TextEditingController();
+    final redeemed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) {
+        String? error;
+        return StatefulBuilder(
+          builder: (ctx, setLocal) {
+            Future<void> attempt() async {
+              final result = await widget.repo.entitlement
+                  .redeemFamilyCode(ctrl.text);
+              switch (result) {
+                case FamilyCodeResult.granted:
+                  if (ctx.mounted) Navigator.of(ctx).pop(true);
+                case FamilyCodeResult.alreadyRedeemed:
+                  setLocal(() =>
+                      error = 'That name was already used on this device.');
+                case FamilyCodeResult.invalid:
+                  setLocal(() => error = 'That code isn’t right.');
+              }
+            }
+
+            return AlertDialog(
+              backgroundColor: BeeColors.surface,
+              title: const Text('Enter code'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: ctrl,
+                    autofocus: true,
+                    textInputAction: TextInputAction.done,
+                    decoration: const InputDecoration(hintText: 'Code'),
+                    onSubmitted: (_) => attempt(),
+                  ),
+                  if (error != null) ...[
+                    const SizedBox(height: 8),
+                    Text(error!,
+                        style: const TextStyle(
+                            color: BeeColors.bad, fontSize: 13)),
+                  ],
+                ],
+              ),
+              actions: [
+                TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(false),
+                    child: const Text('Cancel')),
+                FilledButton(
+                    onPressed: attempt, child: const Text('Unlock')),
+              ],
+            );
+          },
+        );
+      },
+    );
+    ctrl.dispose();
+    if (redeemed == true && mounted) {
+      final days = widget.repo.entitlement.freeGrantDaysLeft;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Unlocked — enjoy $days free days!'),
+        duration: const Duration(seconds: 3),
+      ));
+      Navigator.of(context).pop(true); // close paywall, entitled now
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final p = widget.repo.purchases;
@@ -46,14 +124,19 @@ class _PaywallScreenState extends State<PaywallScreen> {
           children: [
             const SizedBox(height: 12),
             Center(
-              child: Image.asset('assets/icon/logo.png', width: 96, height: 96),
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: _onLogoTap, // secret: 5 taps opens the family code box
+                child:
+                    Image.asset('assets/icon/logo.png', width: 96, height: 96),
+              ),
             ),
             const SizedBox(height: 16),
             const Text('Your free trial is complete',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
             const SizedBox(height: 10),
-            const Text(
+            Text(
               'You’ve had three free days on the clock. Unlock the full game — '
               'one time, yours forever.',
               textAlign: TextAlign.center,
@@ -91,7 +174,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
             ],
             if (kDevTools) ...[
               const SizedBox(height: 24),
-              const Divider(color: BeeColors.surfaceHi),
+              Divider(color: BeeColors.surfaceHi),
               Center(
                 child: TextButton(
                   onPressed: () async {
@@ -99,7 +182,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     await widget.repo.entitlement.setPurchased(true);
                     nav.pop(true);
                   },
-                  child: const Text('DEV: unlock without paying (testing)',
+                  child: Text('DEV: unlock without paying (testing)',
                       style: TextStyle(color: BeeColors.muted, fontSize: 12)),
                 ),
               ),

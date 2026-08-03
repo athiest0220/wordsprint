@@ -101,10 +101,11 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.only(left: 4, bottom: 8),
               child: Text(
                 '${_months[d.month - 1]} ${d.day}, ${d.year}  ·  pick a size',
-                style: const TextStyle(fontSize: 13, color: BeeColors.muted),
+                style: TextStyle(fontSize: 13, color: BeeColors.muted),
               ),
             ),
             if (widget.repo.entitlement.inTrial) _trialBanner(),
+            if (widget.repo.entitlement.inFreeGrant) _freeGrantBanner(),
             _importCard(),
             for (final size in PuzzleEngine.sizes) _sizeCard(size),
           ],
@@ -143,6 +144,31 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 minimumSize: Size.zero),
             child: const Text('Unlock'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _freeGrantBanner() {
+    final left = widget.repo.entitlement.freeGrantDaysLeft;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: BeeColors.good.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: BeeColors.good.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.card_giftcard, color: BeeColors.good, size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Free access — $left ${left == 1 ? 'day' : 'days'} left',
+              style: const TextStyle(fontSize: 13, color: BeeColors.good),
+            ),
           ),
         ],
       ),
@@ -190,11 +216,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     color: BeeColors.accent, size: 24),
               ),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Today’s Puzzle',
+                    const Text('Today’s Puzzle',
                         style: TextStyle(
                             fontSize: 16, fontWeight: FontWeight.w700)),
                     Text('Time yourself against today’s puzzle',
@@ -203,7 +229,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: BeeColors.muted),
+              Icon(Icons.chevron_right, color: BeeColors.muted),
             ],
           ),
         ),
@@ -260,7 +286,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     RichText(
                       text: TextSpan(
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
                             color: BeeColors.cellText),
@@ -268,7 +294,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           TextSpan(text: '$size Letters'),
                           TextSpan(
                             text: '   $minLen+ letter words',
-                            style: const TextStyle(
+                            style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w400,
                                 color: BeeColors.muted),

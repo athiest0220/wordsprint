@@ -149,13 +149,13 @@ class _StatsCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text('$label · career stats',
-              style: const TextStyle(fontSize: 15, color: BeeColors.muted)),
+              style: const TextStyle(fontSize: 15, color: BeeColors.darkMuted)),
           const SizedBox(height: 16),
           Text('${s.gamesCompleted} completed · ${s.gamesStarted} played',
               style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
-                  color: BeeColors.cellText)),
+                  color: BeeColors.darkText)),
           const SizedBox(height: 16),
           if (s.pangramCount > 0)
             _row('🐝', 'Pangram', s.avgPangramMs, s.pangramBestMs,
@@ -170,12 +170,12 @@ class _StatsCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text('🙈 Oops rate ${(s.oopsRate! * 100).toStringAsFixed(0)}%',
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: BeeColors.muted, fontSize: 13)),
+                style: const TextStyle(color: BeeColors.darkMuted, fontSize: 13)),
           ],
           const SizedBox(height: 14),
           const Text('Race the dictionary ⏱',
               textAlign: TextAlign.center,
-              style: TextStyle(color: BeeColors.muted, fontSize: 12)),
+              style: TextStyle(color: BeeColors.darkMuted, fontSize: 12)),
           const SizedBox(height: 6),
           const Text(kWordSprintShareTag,
               textAlign: TextAlign.center,
@@ -197,7 +197,7 @@ class _StatsCard extends StatelessWidget {
             flex: 5,
             child: Text('$icon $label',
                 style: const TextStyle(
-                    fontSize: 14, color: BeeColors.outerCellText)),
+                    fontSize: 14, color: BeeColors.darkText)),
           ),
           Expanded(
             flex: 3,
@@ -211,7 +211,7 @@ class _StatsCard extends StatelessWidget {
             flex: 2,
             child: Text('×$count',
                 textAlign: TextAlign.right,
-                style: const TextStyle(color: BeeColors.muted, fontSize: 12)),
+                style: const TextStyle(color: BeeColors.darkMuted, fontSize: 12)),
           ),
         ],
       ),
@@ -225,7 +225,7 @@ class _StatsCard extends StatelessWidget {
       textBaseline: TextBaseline.alphabetic,
       children: [
         Text('$k ',
-            style: const TextStyle(color: BeeColors.muted, fontSize: 11)),
+            style: const TextStyle(color: BeeColors.darkMuted, fontSize: 11)),
         Text(v,
             style: const TextStyle(
                 fontWeight: FontWeight.w700,
