@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'services/app_repository.dart';
 import 'screens/home_screen.dart';
 import 'theme.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Portrait-only: the game's layout (letter wheel, timers, board) is designed
+  // for a tall 9:16 screen and looks broken in landscape, so lock the rotation.
+  SystemChrome.setPreferredOrientations(
+      const [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
   runApp(const SpeedBeeApp());
 }
 
