@@ -15,11 +15,12 @@ class FaqScreen extends StatelessWidget {
     _QA(
       'Why does Word Sprint have so many more words than other spelling games?',
       'Ask not why ours has MORE words — ask why theirs has fewer.\n\n'
-          'We build our word list from the actual English dictionary. Not the '
-          'Scrabble dictionary. Not the Urban Dictionary. The English one — you '
-          'know, the big one with all the English in it. So yes, some days '
-          'you’ll find words you didn’t know existed. That’s not a bug. That’s '
-          'a vocabulary.',
+          'We build our word list from real English words people actually use — '
+          'the kind you can tap and look up. Not the obscure Scrabble-only '
+          'oddities (sorry, “runround”). Not the Urban Dictionary. The real '
+          'ones. So yes, some days you’ll find a word you didn’t know existed — '
+          'but it’s a real word worth knowing, not a dictionary loophole. That’s '
+          'not a bug. That’s a vocabulary.',
     ),
     _QA(
       'Why are there no swear words?',

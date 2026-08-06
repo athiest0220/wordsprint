@@ -23,3 +23,6 @@ assets/words.backup.txt
 
 # Word-frequency build input for tool/build_pools.dart (fetch from norvig.com/ngrams/count_1w.txt)
 count_1w.txt
+
+# Original ENABLE word list (kept locally as a restore point for the prune)
+words.enable.backup.txt
