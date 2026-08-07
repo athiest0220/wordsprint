@@ -12,6 +12,10 @@ class TimersBar extends StatelessWidget {
   final bool hasPerfect;
   final int pangramTotal;
   final int perfectTotal;
+  final int pangramFound;
+  final int perfectFound;
+  final VoidCallback? onPangramTap;
+  final VoidCallback? onPerfectTap;
 
   const TimersBar({
     super.key,
@@ -21,40 +25,51 @@ class TimersBar extends StatelessWidget {
     required this.hasPerfect,
     required this.pangramTotal,
     required this.perfectTotal,
+    this.pangramFound = 0,
+    this.perfectFound = 0,
+    this.onPangramTap,
+    this.onPerfectTap,
   });
+
+  /// Badge text: "got/total" when there's more than one to find, else just the
+  /// single count. Null hides the badge.
+  String? _badge(int found, int total) {
+    if (total <= 0) return null;
+    return total > 1 ? '$found/$total' : '$total';
+  }
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
         _tile('🐝', 'Pangram', pangramMs, BeeColors.pangram,
-            badge: pangramTotal),
+            badge: _badge(pangramFound, pangramTotal), onTap: onPangramTap),
         if (hasPerfect)
           _tile('⭐', 'Perfect', perfectMs, BeeColors.perfect,
-              badge: perfectTotal),
+              badge: _badge(perfectFound, perfectTotal), onTap: onPerfectTap),
         _tile('🏁', 'Complete', completeMs, BeeColors.good),
       ],
     );
   }
 
-  Widget _tile(String icon, String label, int? ms, Color color, {int? badge}) {
+  Widget _tile(String icon, String label, int? ms, Color color,
+      {String? badge, VoidCallback? onTap}) {
     final pending = ms == null;
-    return Expanded(
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 4),
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
-        decoration: BoxDecoration(
-          color: BeeColors.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: pending ? BeeColors.surfaceHi : color.withValues(alpha: 0.6),
-            width: 1.5,
-          ),
+    final tile = Container(
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+      decoration: BoxDecoration(
+        color: BeeColors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: pending ? BeeColors.surfaceHi : color.withValues(alpha: 0.6),
+          width: 1.5,
         ),
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Column(
+      ),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Column(
               children: [
                 Text('$icon $label',
                     style: TextStyle(
@@ -71,8 +86,8 @@ class TimersBar extends StatelessWidget {
                 ),
               ],
             ),
-            // Small count badge: how many (perfect) pangrams exist.
-            if (badge != null && badge > 0)
+            // Small count badge: pangrams you've got / how many exist.
+            if (badge != null)
               Positioned(
                 right: -2,
                 top: -2,
@@ -84,7 +99,7 @@ class TimersBar extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
-                    '$badge',
+                    badge,
                     style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
@@ -95,7 +110,15 @@ class TimersBar extends StatelessWidget {
               ),
           ],
         ),
-      ),
+      );
+    return Expanded(
+      child: onTap == null
+          ? tile
+          : InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: onTap,
+              child: tile,
+            ),
     );
   }
 }

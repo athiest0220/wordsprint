@@ -93,7 +93,11 @@ class ResultsScreen extends StatelessWidget {
                 children: [
                   for (final w in (puzzle.pangrams.toList()..sort()))
                     Chip(
-                      label: Text(w),
+                      avatar: Text(puzzle.isPerfectPangram(w) ? '⭐' : '🐝',
+                          style: const TextStyle(fontSize: 14)),
+                      label: Text(prog.pangramTimes[w] == null
+                          ? w
+                          : '$w · ${formatClockShort(prog.pangramTimes[w])}'),
                       backgroundColor: BeeColors.accent.withValues(alpha: 0.25),
                       side: const BorderSide(color: BeeColors.accent),
                     ),

@@ -284,6 +284,11 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                         hasPerfect: p.hasPerfectPangram,
                         pangramTotal: p.pangrams.length,
                         perfectTotal: p.perfectPangrams.length,
+                        pangramFound: _c.pangramsFound,
+                        perfectFound: _c.perfectFound,
+                        onPangramTap: _openPangramSheet,
+                        onPerfectTap: () =>
+                            _openPangramSheet(perfectOnly: true),
                       ),
                       const SizedBox(height: 10),
                       _rankRow(),
@@ -654,6 +659,105 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
             shape: const StadiumBorder(),
           );
     return OutlinedButton(onPressed: onTap, style: style, child: child);
+  }
+
+  // ---- pangram sheet (which ones you got, and how long each took) ----
+
+  void _openPangramSheet({bool perfectOnly = false}) {
+    final p = widget.puzzle;
+    final total = perfectOnly ? p.perfectPangrams.length : p.pangrams.length;
+    final found = perfectOnly ? _c.perfectFound : _c.pangramsFound;
+    final title = perfectOnly ? 'Perfect pangrams' : 'Pangrams';
+    final accent = perfectOnly ? BeeColors.perfect : BeeColors.pangram;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: BeeColors.surface,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        // Read details fresh so times reflect the latest state.
+        final details = _c.foundPangramDetails(perfectOnly: perfectOnly);
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(perfectOnly ? '⭐' : '🐝',
+                        style: const TextStyle(fontSize: 22)),
+                    const SizedBox(width: 8),
+                    Text(title,
+                        style: const TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.w800)),
+                    const Spacer(),
+                    Text('got $found of $total',
+                        style: TextStyle(
+                            color: accent, fontWeight: FontWeight.w700)),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text('Tap-to-see the ones you\'ve found and how long each took.',
+                    style: TextStyle(color: BeeColors.muted, fontSize: 12)),
+                const SizedBox(height: 12),
+                if (details.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: Text(
+                      perfectOnly
+                          ? 'No perfect pangrams yet — find a word that uses '
+                              'every letter exactly once.'
+                          : 'No pangrams yet — find a word that uses every '
+                              'letter at least once.',
+                      style: TextStyle(color: BeeColors.muted),
+                    ),
+                  )
+                else
+                  ...details.map((d) => Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 5),
+                        child: Row(
+                          children: [
+                            Text(d.perfect ? '⭐' : '🐝',
+                                style: const TextStyle(fontSize: 15)),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                d.word,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  color: d.perfect
+                                      ? BeeColors.perfect
+                                      : BeeColors.pangram,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              formatClock(d.ms),
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                fontFeatures: [FontFeature.tabularFigures()],
+                              ),
+                            ),
+                          ],
+                        ),
+                      )),
+                if (details.isNotEmpty && found < total) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    '${total - found} more to find — no peeking. 🐝',
+                    style: TextStyle(color: BeeColors.muted, fontSize: 12),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   // ---- words sheet (with give-up reveal) ----

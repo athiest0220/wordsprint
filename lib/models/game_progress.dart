@@ -15,6 +15,11 @@ class GameProgress {
   int? perfectMs; // ...first perfect pangram (null if the puzzle has none)
   int? completeMs; // ...when every valid word had been found
 
+  /// Active-time (ms) at which each individual pangram was found, keyed by the
+  /// word. Perfect pangrams are included here too. Lets us show every pangram's
+  /// own time (not just the first) and average only the ones actually achieved.
+  final Map<String, int> pangramTimes;
+
   /// Count of rejected guesses ("oops") — not-a-word, too short, missing
   /// center, or bad letter. Duplicates and empty entries don't count.
   int oopsCount;
@@ -40,6 +45,7 @@ class GameProgress {
     this.pangramMs,
     this.perfectMs,
     this.completeMs,
+    Map<String, int>? pangramTimes,
     this.oopsCount = 0,
     this.gaveUp = false,
     this.pangramRecorded = false,
@@ -47,7 +53,8 @@ class GameProgress {
     this.completeRecorded = false,
     this.startedRecorded = false,
     this.endRecorded = false,
-  }) : foundWords = foundWords ?? <String>{};
+  })  : foundWords = foundWords ?? <String>{},
+        pangramTimes = pangramTimes ?? <String, int>{};
 
   Map<String, dynamic> toJson() => {
         'k': puzzleKey,
@@ -56,6 +63,7 @@ class GameProgress {
         'pa': pangramMs,
         'pe': perfectMs,
         'co': completeMs,
+        'pt': pangramTimes,
         'oops': oopsCount,
         'gu': gaveUp,
         'par': pangramRecorded,
@@ -72,6 +80,9 @@ class GameProgress {
         pangramMs: j['pa'] as int?,
         perfectMs: j['pe'] as int?,
         completeMs: j['co'] as int?,
+        pangramTimes: (j['pt'] as Map?)
+                ?.map((k, v) => MapEntry(k as String, v as int)) ??
+            <String, int>{},
         oopsCount: j['oops'] as int? ?? 0,
         gaveUp: j['gu'] as bool? ?? false,
         pangramRecorded: j['par'] as bool? ?? false,

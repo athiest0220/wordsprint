@@ -103,6 +103,26 @@ class GameController extends ChangeNotifier {
       totalCount == 0 ? 0 : foundCount / totalCount;
 
   int get pangramsFound => progress.foundWords.where(puzzle.isPangram).length;
+  int get perfectFound =>
+      progress.foundWords.where(puzzle.isPerfectPangram).length;
+
+  int get pangramsTotal => puzzle.pangrams.length;
+  int get perfectTotal => puzzle.perfectPangrams.length;
+
+  /// The pangrams the player has found, each with the active-time it took to
+  /// get it, earliest first. Perfect pangrams are flagged. Never reveals
+  /// pangrams that haven't been found yet (no spoilers).
+  List<({String word, int ms, bool perfect})> foundPangramDetails(
+      {bool perfectOnly = false}) {
+    final out = <({String word, int ms, bool perfect})>[];
+    for (final e in progress.pangramTimes.entries) {
+      final perfect = puzzle.isPerfectPangram(e.key);
+      if (perfectOnly && !perfect) continue;
+      out.add((word: e.key, ms: e.value, perfect: perfect));
+    }
+    out.sort((a, b) => a.ms.compareTo(b.ms));
+    return out;
+  }
 
   int get oopsCount => progress.oopsCount;
 
@@ -175,6 +195,16 @@ class GameController extends ChangeNotifier {
     final isPerfect = puzzle.isPerfectPangram(word);
     final now = elapsedMs;
 
+    // Record THIS pangram's own time. Each achieved pangram is its own data
+    // point in the averages, so a pangram you never got never counts against
+    // you — only the ones you actually found do. _accept only runs for brand-new
+    // words, so each pangram is recorded exactly once (even across resumes).
+    if (isPangram) {
+      progress.pangramTimes[word] = now;
+      repo.stats.recordPangram(puzzle.size, now);
+      if (isPerfect) repo.stats.recordPerfect(puzzle.size, now);
+    }
+
     _checkMilestones(isPangram, isPerfect, now);
     _persist();
     notifyListeners();
@@ -189,19 +219,15 @@ class GameController extends ChangeNotifier {
   }
 
   void _checkMilestones(bool isPangram, bool isPerfect, int now) {
+    // pangramMs / perfectMs hold the FIRST time for the milestone tile; each
+    // pangram's individual time is recorded separately in [_accept].
     if (isPangram && progress.pangramMs == null) {
       progress.pangramMs = now;
-      if (!progress.pangramRecorded) {
-        progress.pangramRecorded = true;
-        repo.stats.recordPangram(puzzle.size, now);
-      }
+      progress.pangramRecorded = true;
     }
     if (isPerfect && puzzle.hasPerfectPangram && progress.perfectMs == null) {
       progress.perfectMs = now;
-      if (!progress.perfectRecorded) {
-        progress.perfectRecorded = true;
-        repo.stats.recordPerfect(puzzle.size, now);
-      }
+      progress.perfectRecorded = true;
     }
     if (progress.completeMs == null &&
         progress.foundWords.length >= puzzle.validWords.length) {
